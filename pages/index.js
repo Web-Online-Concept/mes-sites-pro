@@ -42,6 +42,11 @@ export default function HomePage() {
       return;
     }
     
+    setLoading(false); // Arrêter le loading si connecté
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  
+  useEffect(() => {
     if (activeTab) {
       fetchBookmarks();
     }
