@@ -18,9 +18,7 @@ const nextConfig = {
       },
     ],
   },
-  experimental: {
-    serverActions: true,
-  },
+
   // Configuration pour Vercel
   env: {
     NEXT_PUBLIC_APP_URL: process.env.VERCEL_URL
