@@ -172,8 +172,8 @@ export default function HomePage() {
     }
   };
 
-  if (!isAuthenticated && !loading) {
-    // Si pas connecté, montrer la page home
+  // Ne PAS rediriger si on est en train de vérifier l'auth
+  if (!loading && !isAuthenticated) {
     router.push('/home');
     return null;
   }
