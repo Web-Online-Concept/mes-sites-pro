@@ -27,6 +27,7 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState(null);
   const [bookmarks, setBookmarks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAddingBookmark, setIsAddingBookmark] = useState(false);
   const [newBookmark, setNewBookmark] = useState({
     url: '',
@@ -39,19 +40,18 @@ export default function HomePage() {
     const token = Cookies.get('auth-token');
     if (!token) {
       router.push('/landing');
-      return;
+    } else {
+      setIsAuthenticated(true);
+      setLoading(false);
     }
-    
-    setLoading(false); // Arrêter le loading si connecté
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [router]);
   
   useEffect(() => {
-    if (activeTab) {
+    if (activeTab && isAuthenticated) {
       fetchBookmarks();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
+  }, [activeTab, isAuthenticated]);
 
   const fetchBookmarks = async () => {
     setLoading(true);
@@ -174,6 +174,14 @@ export default function HomePage() {
       }
     }
   };
+
+  if (!isAuthenticated || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
 
   return (
     <Layout>
