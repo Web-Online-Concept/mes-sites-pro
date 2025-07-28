@@ -1,233 +1,297 @@
-useEffect(() => {
-    feimport { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import Head from 'next/head';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import Layout from '@/components/Layout';
+import TabManager from '@/components/TabManager';
+import BookmarkCard from '@/components/BookmarkCard';
+import ExportImport from '@/components/ExportImport';
 import toast from 'react-hot-toast';
 
-export default function TabManager({ activeTab, onTabChange }) {
-  const [tabs, setTabs] = useState([]);
-  const [isCreating, setIsCreating] = useState(false);
-  const [newTabName, setNewTabName] = useState('');
-  const [editingTab, setEditingTab] = useState(null);
-  const [editTabName, setEditTabName] = useState('');
+export default function HomePage() {
+  const [activeTab, setActiveTab] = useState(null);
+  const [bookmarks, setBookmarks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isAddingBookmark, setIsAddingBookmark] = useState(false);
+  const [newBookmark, setNewBookmark] = useState({
+    url: '',
+    title: '',
+    description: ''
+  });
 
   useEffect(() => {
-    fetchTabs();
-  }, []);
+    if (activeTab) {
+      fetchBookmarks();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
-  const fetchTabs = async () => {
+  const fetchBookmarks = async () => {
+    setLoading(true);
     try {
-      const response = await fetch('/api/tabs');
+      const response = await fetch(`/api/bookmarks?tabId=${activeTab}`);
       if (response.ok) {
         const data = await response.json();
-        setTabs(data);
-        // Si aucun onglet actif et qu'il y a des onglets, sélectionner le premier
-        if (!activeTab && data.length > 0) {
-          onTabChange(data[0].id);
-        }
+        setBookmarks(data);
       }
     } catch (error) {
-      console.error('Error fetching tabs:', error);
-      toast.error('Erreur lors du chargement des onglets');
+      console.error('Error fetching bookmarks:', error);
+      toast.error('Erreur lors du chargement des favoris');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const createTab = async () => {
-    if (!newTabName.trim()) {
-      toast.error('Le nom de l\'onglet ne peut pas être vide');
+  const handleAddBookmark = async (e) => {
+    e.preventDefault();
+    
+    if (!newBookmark.url || !newBookmark.title) {
+      toast.error('L\'URL et le titre sont requis');
       return;
     }
 
     try {
-      const response = await fetch('/api/tabs', {
+      const response = await fetch('/api/bookmarks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newTabName.trim() }),
+        body: JSON.stringify({
+          ...newBookmark,
+          tabId: activeTab,
+        }),
       });
 
       if (response.ok) {
-        const newTab = await response.json();
-        setTabs([...tabs, newTab]);
-        setNewTabName('');
-        setIsCreating(false);
-        toast.success('Onglet créé avec succès');
-        onTabChange(newTab.id);
+        const bookmark = await response.json();
+        setBookmarks([...bookmarks, bookmark]);
+        setNewBookmark({ url: '', title: '', description: '' });
+        setIsAddingBookmark(false);
+        toast.success('Favori ajouté');
       } else {
         const error = await response.json();
-        toast.error(error.error || 'Erreur lors de la création');
+        toast.error(error.error || 'Erreur lors de l\'ajout');
       }
     } catch (error) {
-      console.error('Error creating tab:', error);
-      toast.error('Erreur lors de la création de l\'onglet');
+      console.error('Add bookmark error:', error);
+      toast.error('Erreur lors de l\'ajout du favori');
     }
   };
 
-  const updateTab = async (tabId) => {
-    if (!editTabName.trim()) {
-      toast.error('Le nom de l\'onglet ne peut pas être vide');
-      return;
-    }
+  const handleUpdateBookmark = (updatedBookmark) => {
+    setBookmarks(bookmarks.map(b => 
+      b.id === updatedBookmark.id ? updatedBookmark : b
+    ));
+  };
 
-    try {
-      const response = await fetch(`/api/tabs/${tabId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: editTabName.trim() }),
-      });
+  const handleDeleteBookmark = (bookmarkId) => {
+    setBookmarks(bookmarks.filter(b => b.id !== bookmarkId));
+  };
 
-      if (response.ok) {
-        const updatedTab = await response.json();
-        setTabs(tabs.map(tab => tab.id === tabId ? updatedTab : tab));
-        setEditingTab(null);
-        setEditTabName('');
-        toast.success('Onglet mis à jour');
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
+
+    if (active.id !== over.id) {
+      const oldIndex = bookmarks.findIndex((b) => b.id === active.id);
+      const newIndex = bookmarks.findIndex((b) => b.id === over.id);
+
+      const newBookmarks = arrayMove(bookmarks, oldIndex, newIndex);
+      setBookmarks(newBookmarks);
+
+      try {
+        await fetch('/api/bookmarks/reorder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bookmarkId: active.id,
+            sourceIndex: oldIndex,
+            destinationIndex: newIndex,
+            sourceTabId: activeTab,
+            destinationTabId: activeTab,
+          }),
+        });
+      } catch (error) {
+        console.error('Reorder error:', error);
+        toast.error('Erreur lors de la réorganisation');
+        fetchBookmarks(); // Recharger en cas d'erreur
       }
-    } catch (error) {
-      console.error('Error updating tab:', error);
-      toast.error('Erreur lors de la mise à jour');
     }
   };
 
-  const deleteTab = async (tabId) => {
-    if (tabs.length <= 1) {
-      toast.error('Vous devez conserver au moins un onglet');
-      return;
-    }
+  const handleImportComplete = () => {
+    // Recharger la page pour actualiser les données
+    window.location.reload();
+  };
 
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cet onglet et tous ses favoris ?')) {
-      return;
-    }
+  // Analyser l'URL pour extraire le titre automatiquement
+  const handleUrlChange = async (url) => {
+    setNewBookmark({ ...newBookmark, url });
 
-    try {
-      const response = await fetch(`/api/tabs/${tabId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        const remainingTabs = tabs.filter(tab => tab.id !== tabId);
-        setTabs(remainingTabs);
-        
-        // Si l'onglet supprimé était actif, sélectionner un autre
-        if (activeTab === tabId && remainingTabs.length > 0) {
-          onTabChange(remainingTabs[0].id);
-        }
-        
-        toast.success('Onglet supprimé');
+    if (url && !newBookmark.title) {
+      try {
+        // Extraire le domaine comme titre par défaut
+        const urlObj = new URL(url);
+        const domain = urlObj.hostname.replace('www.', '');
+        const siteName = domain.split('.')[0];
+        setNewBookmark(prev => ({
+          ...prev,
+          title: prev.title || siteName.charAt(0).toUpperCase() + siteName.slice(1)
+        }));
+      } catch {
+        // URL invalide, ignorer
       }
-    } catch (error) {
-      console.error('Error deleting tab:', error);
-      toast.error('Erreur lors de la suppression');
     }
   };
 
   return (
-    <div className="mb-6">
-      <div className="flex flex-wrap items-center gap-2 p-4 bg-white rounded-lg shadow-sm">
-        {/* Liste des onglets */}
-        <div className="flex flex-wrap gap-2">
-          {tabs.map((tab) => (
-            <div key={tab.id} className="relative group">
-              {editingTab === tab.id ? (
-                <div className="flex items-center gap-1">
-                  <input
-                    type="text"
-                    value={editTabName}
-                    onChange={(e) => setEditTabName(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && updateTab(tab.id)}
-                    onBlur={() => updateTab(tab.id)}
-                    className="px-3 py-1 text-sm border border-primary-500 rounded-md focus:outline-none"
-                    autoFocus
-                  />
-                </div>
+    <Layout>
+      <Head>
+        <title>Mes Sites Pro - Gestionnaire de favoris</title>
+        <meta name="description" content="Organisez vos sites favoris par onglets" />
+      </Head>
+
+      <div className="space-y-6">
+        {/* Gestion des onglets */}
+        <TabManager activeTab={activeTab} onTabChange={setActiveTab} />
+
+        {/* Export/Import */}
+        <ExportImport onImport={handleImportComplete} />
+
+        {/* Contenu principal */}
+        {activeTab && (
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            {/* Bouton ajouter un favori */}
+            <div className="mb-6">
+              {isAddingBookmark ? (
+                <form onSubmit={handleAddBookmark} className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        URL *
+                      </label>
+                      <input
+                        type="url"
+                        value={newBookmark.url}
+                        onChange={(e) => handleUrlChange(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        placeholder="https://example.com"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Titre *
+                      </label>
+                      <input
+                        type="text"
+                        value={newBookmark.title}
+                        onChange={(e) => setNewBookmark({ ...newBookmark, title: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        placeholder="Nom du site"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Description (optionnel)
+                    </label>
+                    <textarea
+                      value={newBookmark.description}
+                      onChange={(e) => setNewBookmark({ ...newBookmark, description: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="Description du site"
+                      rows="2"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+                    >
+                      Ajouter
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAddingBookmark(false);
+                        setNewBookmark({ url: '', title: '', description: '' });
+                      }}
+                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </form>
               ) : (
                 <button
-                  onClick={() => onTabChange(tab.id)}
-                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                  onClick={() => setIsAddingBookmark(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
                 >
-                  {tab.name}
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Ajouter un favori
                 </button>
               )}
-              
-              {/* Actions sur l'onglet */}
-              {!editingTab && (
-                <div className="absolute -top-2 -right-2 hidden group-hover:flex items-center gap-1 bg-white rounded-md shadow-lg p-1">
-                  <button
-                    onClick={() => {
-                      setEditingTab(tab.id);
-                      setEditTabName(tab.name);
-                    }}
-                    className="p-1 text-gray-500 hover:text-primary-600 transition-colors"
-                    title="Modifier"
-                  >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </button>
-                  {tabs.length > 1 && (
-                    <button
-                      onClick={() => deleteTab(tab.id)}
-                      className="p-1 text-gray-500 hover:text-red-600 transition-colors"
-                      title="Supprimer"
-                    >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              )}
             </div>
-          ))}
-        </div>
 
-        {/* Bouton ajouter un onglet */}
-        {isCreating ? (
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={newTabName}
-              onChange={(e) => setNewTabName(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && createTab()}
-              placeholder="Nom de l'onglet"
-              className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-primary-500"
-              autoFocus
-            />
-            <button
-              onClick={createTab}
-              className="p-1 text-green-600 hover:bg-green-50 rounded"
-              title="Valider"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </button>
-            <button
-              onClick={() => {
-                setIsCreating(false);
-                setNewTabName('');
-              }}
-              className="p-1 text-red-600 hover:bg-red-50 rounded"
-              title="Annuler"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            {/* Liste des favoris */}
+            {loading ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+              </div>
+            ) : bookmarks.length === 0 ? (
+              <div className="text-center py-12">
+                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                <p className="mt-4 text-gray-500">Aucun favori dans cet onglet</p>
+                <p className="text-sm text-gray-400 mt-1">Cliquez sur &quot;Ajouter un favori&quot; pour commencer</p>
+              </div>
+            ) : (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={bookmarks.map(b => b.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {bookmarks.map((bookmark) => (
+                      <BookmarkCard
+                        key={bookmark.id}
+                        bookmark={bookmark}
+                        onUpdate={handleUpdateBookmark}
+                        onDelete={handleDeleteBookmark}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            )}
           </div>
-        ) : (
-          <button
-            onClick={() => setIsCreating(true)}
-            className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-primary-600 bg-primary-50 rounded-md hover:bg-primary-100 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Nouvel onglet
-          </button>
         )}
       </div>
-    </div>
+    </Layout>
   );
 }
