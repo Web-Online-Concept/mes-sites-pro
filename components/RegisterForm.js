@@ -55,11 +55,11 @@ export default function RegisterForm() {
         toast.success('Inscription réussie ! Vous pouvez maintenant vous connecter.');
         router.push('/login');
       } else {
-        toast.error(data.error || `Erreur lors de l'inscription`);
+        toast.error(data.error || 'Erreur lors de l\'inscription');
       }
     } catch (error) {
       console.error('Register error:', error);
-      toast.error(`Erreur lors de l'inscription`);
+      toast.error('Erreur lors de l\'inscription');
     } finally {
       setLoading(false);
     }
@@ -95,7 +95,7 @@ export default function RegisterForm() {
                 value={formData.username}
                 onChange={handleChange}
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                placeholder="              Nom d'utilisateur"
+                placeholder="Nom d'utilisateur"
               />
             </div>
 
@@ -166,7 +166,7 @@ export default function RegisterForm() {
                   Inscription...
                 </span>
               ) : (
-                '                {`S'inscrire`}'
+                'Créer mon compte'
               )}
             </button>
           </div>
