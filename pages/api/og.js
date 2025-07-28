@@ -57,6 +57,7 @@ export default async function handler(req) {
           >
             <img
               src={`https://www.google.com/s2/favicons?domain=${domain}&sz=128`}
+              alt=""
               width={80}
               height={80}
               style={{ borderRadius: 10 }}

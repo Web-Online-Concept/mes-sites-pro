@@ -55,11 +55,11 @@ export default function RegisterForm() {
         toast.success('Inscription réussie ! Vous pouvez maintenant vous connecter.');
         router.push('/login');
       } else {
-        toast.error(data.error || 'Erreur lors de l\'inscription');
+        toast.error(data.error || 'Erreur lors de l&apos;inscription');
       }
     } catch (error) {
       console.error('Register error:', error);
-      toast.error('Erreur lors de l\'inscription');
+      toast.error('Erreur lors de l&apos;inscription');
     } finally {
       setLoading(false);
     }
@@ -166,7 +166,7 @@ export default function RegisterForm() {
                   Inscription...
                 </span>
               ) : (
-                'S\'inscrire'
+                '                S&apos;inscrire'
               )}
             </button>
           </div>
