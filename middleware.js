@@ -1,9 +1,3 @@
-import { NextResponse } from 'next/server';
-
-export async function middleware(request) {
-  return NextResponse.next();
+export default function middleware() {
+  // Ne rien faire
 }
-
-export const config = {
-  matcher: '/((?!_next/static|_next/image|favicon.ico).*)',
-};
