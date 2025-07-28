@@ -39,7 +39,7 @@ export default function HomePage() {
     // Vérifier l'authentification
     const token = Cookies.get('auth-token');
     if (!token) {
-      router.push('/landing');
+      router.push('/home');
     } else {
       setIsAuthenticated(true);
       setLoading(false);

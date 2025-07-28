@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
 // Pages publiques qui ne nécessitent pas d'authentification
-const publicPaths = ['/login', '/register', '/landing', '/api/auth/login', '/api/auth/register'];
+const publicPaths = ['/login', '/register', '/home', '/landing', '/api/auth/login', '/api/auth/register'];
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
