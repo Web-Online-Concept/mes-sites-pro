@@ -38,7 +38,8 @@ export default function LoginForm() {
         // Stocker le token dans les cookies
         Cookies.set('auth-token', data.token, { expires: 7 });
         toast.success('Connexion réussie !');
-        router.push('/');
+        // Forcer le rechargement complet pour voir l'app
+        window.location.href = '/';
       } else {
         toast.error(data.error || 'Erreur de connexion');
       }
