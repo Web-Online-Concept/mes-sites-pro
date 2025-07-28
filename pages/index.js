@@ -40,11 +40,11 @@ export default function HomePage() {
     const token = Cookies.get('auth-token');
     if (!token) {
       router.push('/home');
-    } else {
-      setIsAuthenticated(true);
-      setLoading(false);
+      return;
     }
-  }, [router]);
+    setIsAuthenticated(true);
+    setLoading(false);
+  }, []);
   
   useEffect(() => {
     if (activeTab && isAuthenticated) {
