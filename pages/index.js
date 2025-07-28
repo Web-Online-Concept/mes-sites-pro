@@ -14,10 +14,10 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import Layout from '../components/Layout';
-import TabManager from '../components/TabManager';
-import BookmarkCard from '../components/BookmarkCard';
-import ExportImport from '../components/ExportImport';
+import Layout from '../components/Layout.js';
+import TabManager from '../components/TabManager.js';
+import BookmarkCard from '../components/BookmarkCard.js';
+import ExportImport from '../components/ExportImport.js';
 import toast from 'react-hot-toast';
 
 export default function HomePage() {
