@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
+import Cookies from 'js-cookie';
 import {
   DndContext,
   closestCenter,
@@ -21,6 +23,7 @@ import ExportImport from '../components/ExportImport.js';
 import toast from 'react-hot-toast';
 
 export default function HomePage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState(null);
   const [bookmarks, setBookmarks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,6 +35,13 @@ export default function HomePage() {
   });
 
   useEffect(() => {
+    // Vérifier l'authentification
+    const token = Cookies.get('auth-token');
+    if (!token) {
+      router.push('/landing');
+      return;
+    }
+    
     if (activeTab) {
       fetchBookmarks();
     }

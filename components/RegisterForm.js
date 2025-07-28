@@ -166,7 +166,7 @@ export default function RegisterForm() {
                   Inscription...
                 </span>
               ) : (
-                '                S&apos;inscrire'
+                '                {'S\'inscrire'}'
               )}
             </button>
           </div>
