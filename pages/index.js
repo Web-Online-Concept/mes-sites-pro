@@ -36,13 +36,10 @@ export default function HomePage() {
   });
 
   useEffect(() => {
-    // Vérifier l'authentification
     const token = Cookies.get('auth-token');
-    if (!token) {
-      router.push('/home');
-      return;
+    if (token) {
+      setIsAuthenticated(true);
     }
-    setIsAuthenticated(true);
     setLoading(false);
   }, []);
   
