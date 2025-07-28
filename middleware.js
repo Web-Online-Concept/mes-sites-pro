@@ -7,6 +7,11 @@ const publicPaths = ['/login', '/register', '/home', '/landing', '/api/auth/logi
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
   
+  // Si on est sur home et connecté, aller à l'app
+  if (pathname === '/home' && token) {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+  
   // Permettre l'accès aux pages publiques
   if (publicPaths.some(path => pathname.startsWith(path))) {
     return NextResponse.next();
