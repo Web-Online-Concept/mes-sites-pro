@@ -42,7 +42,28 @@ async function getTabs(userId, res) {
       }
     });
 
-    res.status(200).json(tabs);
+    // Calculer le total des favoris pour chaque onglet (incluant les sous-catégories)
+    const tabsWithTotalCount = tabs.map(tab => {
+      // Compter les favoris de l'onglet principal
+      let totalBookmarks = tab._count.bookmarks;
+      
+      // Ajouter les favoris de chaque sous-catégorie
+      if (tab.children && tab.children.length > 0) {
+        tab.children.forEach(child => {
+          totalBookmarks += child._count.bookmarks;
+        });
+      }
+      
+      return {
+        ...tab,
+        _count: {
+          ...tab._count,
+          totalBookmarks // Nouveau champ pour le total
+        }
+      };
+    });
+
+    res.status(200).json(tabsWithTotalCount);
   } catch (error) {
     console.error('Get tabs error:', error);
     res.status(500).json({ error: 'Erreur lors de la récupération des onglets' });

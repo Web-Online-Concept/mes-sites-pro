@@ -185,14 +185,14 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
                 }`}
               >
                 {tab.name}
-                {/* Badge avec le nombre de favoris */}
-                {!isEditMode && tab._count?.bookmarks > 0 && (
+                {/* Badge avec le nombre total de favoris */}
+                {!isEditMode && tab._count?.totalBookmarks > 0 && (
                   <span className={`text-xs px-1.5 py-0.5 rounded-full ${
                     activeTab === tab.id
                       ? 'bg-blue-500 text-white'
                       : 'bg-gray-200 text-gray-600'
                   } font-semibold`}>
-                    {tab._count.bookmarks}
+                    {tab._count.totalBookmarks}
                   </span>
                 )}
                 {/* Actions intégrées dans l'onglet actif seulement */}
