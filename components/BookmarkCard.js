@@ -4,6 +4,9 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
 export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode, tabs }) {
+  // Debug temporaire
+  console.log('BookmarkCard - tabs:', tabs, 'isEditMode:', isEditMode);
+  
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     title: bookmark.title,
@@ -275,18 +278,21 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
                 
                 {/* Sélecteur de catégorie */}
                 {tabs && tabs.length > 1 && (
-                  <select
-                    value={selectedTabId}
-                    onChange={(e) => handleTabChange(e.target.value)}
-                    className="mt-1 text-xs border border-gray-200 rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    title="Déplacer vers..."
-                  >
-                    {tabs.map((tab) => (
-                      <option key={tab.id} value={tab.id}>
-                        {tab.icon} {tab.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="mt-1">
+                    <select
+                      value={selectedTabId}
+                      onChange={(e) => handleTabChange(e.target.value)}
+                      className="text-xs border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-blue-500 bg-gray-50"
+                      title="Déplacer vers..."
+                    >
+                      <option disabled value="">Déplacer vers...</option>
+                      {tabs.map((tab) => (
+                        <option key={tab.id} value={tab.id}>
+                          {tab.icon || '📁'} {tab.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 )}
                 
                 {/* Description si présente */}
