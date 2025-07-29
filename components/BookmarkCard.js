@@ -88,10 +88,16 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete }) {
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
-      className="bookmark-card bg-white rounded-lg shadow-sm hover:shadow-md overflow-hidden transition-all cursor-move border border-gray-200"
+      className="bookmark-card bg-white rounded-lg shadow-sm hover:shadow-md overflow-hidden transition-all border border-gray-200"
     >
+      {/* Zone draggable - seulement le haut de la carte */}
+      <div {...attributes} {...listeners} className="cursor-move p-2 bg-gray-50 border-b">
+        <div className="flex justify-center">
+          <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M7 2a2 2 0 11-4 0 2 2 0 014 0zM17 2a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0zM17 10a2 2 0 11-4 0 2 2 0 014 0zM7 18a2 2 0 11-4 0 2 2 0 014 0zM17 18a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+        </div>
+      </div>
       {/* Image de prévisualisation */}
       <a 
         href={bookmark.url}
