@@ -9,45 +9,7 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
     title: bookmark.title,
     description: bookmark.description || ''
   });
-  const [imageError, setImageError] = useState(false);
-  const [imageLoading, setImageLoading] = useState(true);
-  const [isBlankImage, setIsBlankImage] = useState(false);
   const [selectedTabId, setSelectedTabId] = useState(bookmark.tabId);
-
-  // Détecter si l'image est blanche/vide
-  const checkIfImageIsBlank = (imgElement) => {
-    // Créer un canvas temporaire
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    // Taille réduite pour l'analyse (plus rapide)
-    const sampleSize = 50;
-    canvas.width = sampleSize;
-    canvas.height = sampleSize;
-    
-    // Dessiner l'image redimensionnée
-    ctx.drawImage(imgElement, 0, 0, sampleSize, sampleSize);
-    
-    // Obtenir les données de pixels
-    const imageData = ctx.getImageData(0, 0, sampleSize, sampleSize);
-    const data = imageData.data;
-    
-    // Vérifier si tous les pixels sont blancs ou presque blancs
-    let isAllWhite = true;
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-      
-      // Si un pixel n'est pas blanc (avec une tolérance)
-      if (r < 250 || g < 250 || b < 250) {
-        isAllWhite = false;
-        break;
-      }
-    }
-    
-    return isAllWhite;
-  };
 
   const {
     attributes,
@@ -176,60 +138,29 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
           rel="noopener noreferrer"
           className="block relative aspect-video bg-gray-50 hover:bg-gray-100 transition-colors group"
         >
-          {/* Loader pendant le chargement */}
-          {imageLoading && !imageError && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-              <div className="animate-pulse">
-                <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24">
-                  <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-            </div>
-          )}
-          
-          {bookmark.screenshot && !imageError && !isBlankImage ? (
+          <div className="relative h-full">
             <img
-              src={bookmark.screenshot}
-              alt={bookmark.title}
+              src="/default-preview.png"
+              alt="Aperçu"
               className="w-full h-full object-cover"
-              onLoad={(e) => {
-                setImageLoading(false);
-                // Vérifier si l'image est blanche
-                if (checkIfImageIsBlank(e.target)) {
-                  setIsBlankImage(true);
-                }
-              }}
-              onError={() => {
-                console.log('Image failed to load:', bookmark.screenshot);
-                setImageError(true);
-                setImageLoading(false);
-              }}
             />
-          ) : (
-            <div className="relative h-full">
-              <img
-                src="/default-preview.png"
-                alt="Aperçu non disponible"
-                className="w-full h-full object-cover"
-              />
-              {/* Overlay avec favicon et domaine */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center bg-white bg-opacity-90 rounded p-2">
-                  <img
-                    src={`https://www.google.com/s2/favicons?domain=${getDomain(bookmark.url)}&sz=32`}
-                    alt=""
-                    className="w-6 h-6 mx-auto mb-1"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                  <p className="text-xs text-gray-700 font-medium truncate max-w-[100px]">
-                    {getDomain(bookmark.url)}
-                  </p>
-                </div>
+            {/* Overlay avec favicon et domaine */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center bg-white bg-opacity-90 rounded p-2">
+                <img
+                  src={`https://www.google.com/s2/favicons?domain=${getDomain(bookmark.url)}&sz=32`}
+                  alt=""
+                  className="w-6 h-6 mx-auto mb-1"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+                <p className="text-xs text-gray-700 font-medium truncate max-w-[100px]">
+                  {getDomain(bookmark.url)}
+                </p>
               </div>
             </div>
-          )}
+          </div>
           
           {/* Overlay au survol */}
           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity flex items-center justify-center">
