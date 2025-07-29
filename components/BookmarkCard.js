@@ -1,57 +1,4 @@
-{bookmark.screenshot && !imageError ? (
-          <img
-            src={bookmark.screenshot}
-            alt={bookmark.title}
-            className="w-full h-full object-cover"
-            onError={() => {
-              console.log('Image failed to load:', bookmark.screenshot);
-              setImageError(true);
-            }}
-          />
-        ) : (
-          <div className="relative h-full">
-            <img
-              src="/default-preview.png"
-              alt="Aperçu non disponible"
-              className="w-full h-full object-cover"
-            />
-            {/* Overlay avec favicon et domaine */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center bg-white bg-opacity-90 rounded-lg p-3">
-                <img
-                  src={`https://www.google.com/s2/favicons?domain=${getDomain(bookmark.url)}&sz=32`}
-                  alt=""
-                  className="w-8 h-8 mx-auto mb-1"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                  }}
-                />
-                <p className="text-xs text-gray-700 font-medium">{getDomain(bookmark.url)}</p>
-              </div>
-            </div>
-          </div>
-        )}('Image failed to load:', bookmark.screenshot);
-              setImageError(true);
-            }}
-          />
-        ) : (
-          <div className="relative h-full">
-            <img
-              src="/default-preview.png"
-              alt="Aperçu non disponible"
-              className="w-full h-full object-cover opacity-80"
-            />
-            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20">
-              <div className="text-center">
-                <img
-                  src={`https://www.google.com/s2/favicons?domain=${getDomain(bookmark.url)}&sz=32`}
-                  alt=""
-                  className="w-8 h-8 mx-auto mb-2 bg-white rounded p-1"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                  }}
-                />
-                <p className="text-white text-sm font-medium bg-black bg-opacity-50import { useState } from 'react';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -123,11 +70,7 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete }) {
     }
   };
 
-  const handleVisit = () => {
-    window.open(bookmark.url, '_blank');
-  };
-
-  // Obtenir le domaine pour afficher un favicon de secours
+  // Obtenir le domaine pour afficher un favicon
   const getDomain = (url) => {
     try {
       const domain = new URL(url).hostname;
@@ -151,6 +94,7 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete }) {
           </svg>
         </div>
       </div>
+
       {/* Image de prévisualisation - plus petite */}
       <a 
         href={bookmark.url}
@@ -169,11 +113,27 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete }) {
             }}
           />
         ) : (
-          <img
-            src="/default-preview.png"
-            alt="Aperçu non disponible"
-            className="w-full h-full object-cover opacity-80"
-          />
+          <div className="relative h-full">
+            <img
+              src="/default-preview.png"
+              alt="Aperçu non disponible"
+              className="w-full h-full object-cover"
+            />
+            {/* Overlay avec favicon et domaine */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center bg-white bg-opacity-90 rounded-lg p-3">
+                <img
+                  src={`https://www.google.com/s2/favicons?domain=${getDomain(bookmark.url)}&sz=32`}
+                  alt=""
+                  className="w-8 h-8 mx-auto mb-1"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+                <p className="text-xs text-gray-700 font-medium">{getDomain(bookmark.url)}</p>
+              </div>
+            </div>
+          </div>
         )}
         
         {/* Overlay au survol */}
@@ -192,13 +152,13 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete }) {
               type="text"
               value={editData.title}
               onChange={(e) => setEditData({ ...editData, title: e.target.value })}
-              className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:border-primary-500"
+              className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:border-primary-500 text-sm"
               placeholder="Titre"
             />
             <textarea
               value={editData.description}
               onChange={(e) => setEditData({ ...editData, description: e.target.value })}
-              className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:border-primary-500 resize-none"
+              className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:border-primary-500 resize-none text-sm"
               placeholder="Description (optionnel)"
               rows="2"
             />
@@ -225,14 +185,14 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete }) {
           </div>
         ) : (
           <>
-            <h3 className="font-semibold text-gray-900 mb-1 truncate" title={bookmark.title}>
+            <h3 className="font-semibold text-gray-900 mb-1 truncate text-sm" title={bookmark.title}>
               {bookmark.title}
             </h3>
             <p className="text-xs text-gray-500 mb-2 truncate" title={bookmark.url}>
               {bookmark.url}
             </p>
             {bookmark.description && (
-              <p className="text-sm text-gray-600 line-clamp-2">
+              <p className="text-xs text-gray-600 line-clamp-2">
                 {bookmark.description}
               </p>
             )}
@@ -242,22 +202,20 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete }) {
 
       {/* Actions */}
       {!isEditing && (
-        <div className="px-4 pb-4 flex gap-2">
+        <div className="px-3 pb-3 flex gap-2 justify-end">
           <button
             onClick={() => setIsEditing(true)}
-            className="flex-1 px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors text-sm"
+            className="p-1.5 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
             title="Modifier"
           >
-            Modifier
+            ✏️
           </button>
           <button
             onClick={handleDelete}
-            className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm"
+            className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
             title="Supprimer"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
+            🗑️
           </button>
         </div>
       )}
