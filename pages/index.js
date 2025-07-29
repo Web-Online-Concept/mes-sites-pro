@@ -191,7 +191,7 @@ export default function HomePage() {
   }
 
   return (
-    <Layout>
+    <Layout isEditMode={isEditMode} onToggleEditMode={() => setIsEditMode(!isEditMode)}>
       <Head>
         <title>Mes Sites Pro - Gestionnaire de favoris</title>
         <meta name="description" content="Organisez vos sites favoris par onglets" />
@@ -204,56 +204,35 @@ export default function HomePage() {
         {/* Contenu principal */}
         {activeTab && (
           <div className="bg-white rounded-lg shadow-sm p-6">
-            {/* Bouton ajouter un favori */}
-            <div className="mb-6 flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-gray-800">Mes favoris</h2>
-              <div className="flex items-center gap-3">
-                {/* Bouton Mode Edition */}
-                <button
-                  onClick={() => setIsEditMode(!isEditMode)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
-                    isEditMode 
-                      ? 'bg-gray-600 text-white hover:bg-gray-700' 
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" 
-                    />
-                  </svg>
-                  {isEditMode ? 'Mode lecture' : 'Modifier'}
-                </button>
-                
-                {/* Bouton Ajouter - visible seulement en mode édition */}
-                {isEditMode && (
-                  isAddingBookmark ? (
-                    <button
-                      onClick={() => {
-                        setIsAddingBookmark(false);
-                        setNewBookmark({ url: '', title: '', description: '' });
-                      }}
-                      className="flex items-center gap-2 px-4 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                      Fermer
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => setIsAddingBookmark(true)}
-                      className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Ajouter un favori
-                    </button>
-                  )
+            {/* Bouton ajouter un favori - visible seulement en mode édition */}
+            {isEditMode && (
+              <div className="mb-6 flex justify-end">
+                {isAddingBookmark ? (
+                  <button
+                    onClick={() => {
+                      setIsAddingBookmark(false);
+                      setNewBookmark({ url: '', title: '', description: '' });
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Fermer
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setIsAddingBookmark(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Ajouter un favori
+                  </button>
                 )}
               </div>
-            </div>
+            )}
 
             {/* Formulaire d'ajout */}
             {isAddingBookmark && (
