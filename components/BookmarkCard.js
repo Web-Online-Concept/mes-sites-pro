@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -100,12 +99,11 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete }) {
         rel="noopener noreferrer"
         className="block relative h-32 bg-gray-50 hover:bg-gray-100 transition-colors group"
       >
-        {bookmark.screenshot && !imageError ? (
-          <Image
+        {bookmark.screenshot ? (
+          <img
             src={bookmark.screenshot}
             alt={bookmark.title}
-            fill
-            className="object-cover"
+            className="w-full h-full object-cover"
             onError={() => setImageError(true)}
           />
         ) : (

@@ -84,7 +84,7 @@ async function createBookmark(userId, req, res) {
       where: { tabId }
     });
 
-    // Créer le favori
+    // Créer le favori avec un screenshot temporaire
     const bookmark = await prisma.bookmark.create({
       data: {
         url,
@@ -93,6 +93,8 @@ async function createBookmark(userId, req, res) {
         tabId,
         userId,
         order: bookmarkCount,
+        // Utiliser notre API OG pour générer une "capture"
+        screenshot: `/api/og?url=${encodeURIComponent(url)}`,
       },
       include: {
         tab: {
