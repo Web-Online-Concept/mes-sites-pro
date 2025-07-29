@@ -248,7 +248,7 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
                 </p>
                 
                 {/* Sélecteur de catégorie */}
-                {tabs && tabs.length > 1 && (
+                {tabs && tabs.length > 0 && (
                   <div className="mt-1">
                     <select
                       value={selectedTabId}
@@ -256,11 +256,15 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
                       className="text-xs border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-blue-500 bg-gray-50"
                       title="Déplacer vers..."
                     >
-                      <option disabled value="">Déplacer vers...</option>
                       {tabs.map((tab) => (
-                        <option key={tab.id} value={tab.id}>
-                          {tab.icon || '📁'} {tab.name}
-                        </option>
+                        <optgroup key={tab.id} label={tab.name}>
+                          <option value={tab.id}>{tab.icon || '📁'} {tab.name}</option>
+                          {tab.children && tab.children.map((subcat) => (
+                            <option key={subcat.id} value={subcat.id}>
+                              &nbsp;&nbsp;└ {subcat.name}
+                            </option>
+                          ))}
+                        </optgroup>
                       ))}
                     </select>
                   </div>
