@@ -200,14 +200,12 @@ export default function HomePage() {
         {/* Gestion des onglets */}
         <TabManager activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {/* Export/Import */}
-        <ExportImport onImport={handleImportComplete} />
-
         {/* Contenu principal */}
         {activeTab && (
           <div className="bg-white rounded-lg shadow-sm p-6">
             {/* Bouton ajouter un favori */}
-            <div className="mb-6">
+            <div className="mb-6 flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-800">Mes favoris</h2>
               {isAddingBookmark ? (
                 <form onSubmit={handleAddBookmark} className="space-y-4 p-4 bg-gray-50 rounded-lg">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -320,6 +318,11 @@ export default function HomePage() {
             )}
           </div>
         )}
+
+        {/* Export/Import en bas */}
+        <div className="mt-8">
+          <ExportImport onImport={handleImportComplete} />
+        </div>
       </div>
     </Layout>
   );

@@ -72,7 +72,7 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete }) {
   };
 
   const handleVisit = () => {
-    window.open(bookmark.url, '_blank', 'noopener,noreferrer');
+    window.open(bookmark.url, '_blank');
   };
 
   // Obtenir le domaine pour afficher un favicon de secours
@@ -91,11 +91,11 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete }) {
       style={style}
       {...attributes}
       {...listeners}
-      className={`bookmark-card bg-white rounded-lg shadow-md overflow-hidden transition-all cursor-move`}
+      className="bookmark-card bg-white rounded-lg shadow-sm hover:shadow-md overflow-hidden transition-all cursor-move border border-gray-200"
     >
       {/* Image de prévisualisation */}
       <div 
-        className="relative h-48 bg-gray-100 cursor-pointer group"
+        className="relative h-32 bg-gray-50 cursor-pointer group"
         onClick={handleVisit}
       >
         {bookmark.screenshot && !imageError ? (
@@ -108,16 +108,16 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete }) {
           />
         ) : (
           <div className="flex items-center justify-center h-full">
-            <div className="text-center">
+            <div className="text-center p-4">
               <img
-                src={`https://www.google.com/s2/favicons?domain=${getDomain(bookmark.url)}&sz=64`}
+                src={`https://www.google.com/s2/favicons?domain=${getDomain(bookmark.url)}&sz=32`}
                 alt=""
-                className="w-16 h-16 mx-auto mb-2"
+                className="w-8 h-8 mx-auto mb-2"
                 onError={(e) => {
                   e.target.style.display = 'none';
                 }}
               />
-              <p className="text-gray-500 text-sm">{getDomain(bookmark.url)}</p>
+              <p className="text-xs text-gray-500">{getDomain(bookmark.url)}</p>
             </div>
           </div>
         )}
@@ -131,7 +131,7 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete }) {
       </div>
 
       {/* Contenu de la carte */}
-      <div className="p-4">
+      <div className="p-3">
         {isEditing ? (
           <div className="space-y-3">
             <input
