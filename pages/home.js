@@ -11,9 +11,10 @@ export default function LandingPage() {
   useEffect(() => {
     const token = Cookies.get('auth-token');
     if (token) {
-      setIsAuthenticated(true);
+      // Si connecté, aller directement à l'app
+      router.push('/');
     }
-  }, []);
+  }, [router]);
 
   const features = [
     {
