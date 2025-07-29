@@ -48,16 +48,16 @@ export default function HomePage() {
   }, []); // Pas de dépendances pour éviter les boucles
   
   useEffect(() => {
-    if (activeTab && isAuthenticated) {
+    if (isAuthenticated) {
       fetchBookmarks();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, isAuthenticated]);
+  }, [isAuthenticated]); // On ne recharge plus quand activeTab change
 
   const fetchBookmarks = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/bookmarks?tabId=${activeTab}`);
+      const response = await fetch(`/api/bookmarks`); // On récupère TOUS les favoris
       if (response.ok) {
         const data = await response.json();
         setBookmarks(data);
@@ -206,7 +206,12 @@ export default function HomePage() {
           <div className="bg-white rounded-lg shadow-sm p-6">
             {/* Bouton ajouter un favori - visible seulement en mode édition */}
             {isEditMode && (
-              <div className="mb-6 flex justify-end">
+              <div className="mb-6 flex justify-end">{loading && (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                  <p className="mt-4 text-gray-500">Chargement des favoris...</p>
+                </div>
+              )}
                 {isAddingBookmark ? (
                   <button
                     onClick={() => {
@@ -322,11 +327,7 @@ export default function HomePage() {
             )}
 
             {/* Liste des favoris */}
-            {loading ? (
-              <div className="flex justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-              </div>
-            ) : bookmarks.length === 0 ? (
+            {bookmarks.filter(b => b.tabId === activeTab).length === 0 ? (
               <div className="text-center py-12">
                 <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -341,19 +342,21 @@ export default function HomePage() {
                 onDragEnd={handleDragEnd}
               >
                 <SortableContext
-                  items={bookmarks.map(b => b.id)}
+                  items={bookmarks.filter(b => b.tabId === activeTab).map(b => b.id)}
                   strategy={verticalListSortingStrategy}
                 >
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                    {bookmarks.map((bookmark) => (
-                      <BookmarkCard
-                        key={bookmark.id}
-                        bookmark={bookmark}
-                        onUpdate={handleUpdateBookmark}
-                        onDelete={handleDeleteBookmark}
-                        isEditMode={isEditMode}
-                      />
-                    ))}
+                    {bookmarks
+                      .filter(b => b.tabId === activeTab)
+                      .map((bookmark) => (
+                        <BookmarkCard
+                          key={bookmark.id}
+                          bookmark={bookmark}
+                          onUpdate={handleUpdateBookmark}
+                          onDelete={handleDeleteBookmark}
+                          isEditMode={isEditMode}
+                        />
+                      ))}
                   </div>
                 </SortableContext>
               </DndContext>
