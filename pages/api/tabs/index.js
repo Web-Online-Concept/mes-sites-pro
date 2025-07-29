@@ -42,7 +42,7 @@ async function getTabs(userId, res) {
       }
     });
 
-    // Calculer le total des favoris pour chaque onglet (incluant les sous-catégories)
+    // Ajouter le total des favoris pour chaque onglet (incluant les sous-catégories)
     const tabsWithTotalCount = tabs.map(tab => {
       // Compter les favoris de l'onglet principal
       let totalBookmarks = tab._count.bookmarks;
@@ -54,13 +54,10 @@ async function getTabs(userId, res) {
         });
       }
       
-      return {
-        ...tab,
-        _count: {
-          ...tab._count,
-          totalBookmarks // Nouveau champ pour le total
-        }
-      };
+      // Ajouter totalBookmarks sans modifier la structure existante
+      tab._count.totalBookmarks = totalBookmarks;
+      
+      return tab;
     });
 
     res.status(200).json(tabsWithTotalCount);
