@@ -140,7 +140,12 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
 
   return (
     <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl shadow-md p-4 border border-gray-700">
-      <div className="flex items-center gap-3 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+      <div className="flex items-center gap-3 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <style jsx>{`
+          div::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
         {tabs.map((tab) => (
           <div key={tab.id} className="relative">
             {editingTab === tab.id ? (
