@@ -30,14 +30,19 @@ model Tab {
   name      String
   order     Int      @default(0)
   userId    String
+  parentId  String?  // Pour la hiérarchie des onglets
+  icon      String?  // Pour stocker l'emoji ou l'icône
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
   // Relations
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    Tab?       @relation("TabHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Tab[]      @relation("TabHierarchy")
   bookmarks Bookmark[]
   
   @@index([userId])
+  @@index([parentId])
 }
 
 // Modèle pour les favoris
@@ -47,6 +52,7 @@ model Bookmark {
   title       String
   description String?
   screenshot  String?  // URL de la capture d'écran
+  favicon     String?  // URL du favicon
   order       Int      @default(0)
   tabId       String
   userId      String
