@@ -199,7 +199,7 @@ export default function HomePage() {
 
       <div className="space-y-6">
         {/* Gestion des onglets */}
-        <TabManager activeTab={activeTab} onTabChange={setActiveTab} />
+        <TabManager activeTab={activeTab} onTabChange={setActiveTab} isEditMode={isEditMode} />
 
         {/* Contenu principal */}
         {activeTab && (
