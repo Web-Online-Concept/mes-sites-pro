@@ -128,7 +128,7 @@ export default function TabManager({ activeTab, onTabChange, isEditMode }) {
     <div className="bg-white rounded-lg shadow-sm p-4">
       <div className="flex items-center gap-2 overflow-x-auto">
         {tabs.map((tab) => (
-          <div key={tab.id} className="flex items-center group">
+          <div key={tab.id} className="relative">
             {editingTab === tab.id ? (
               <form onSubmit={(e) => { e.preventDefault(); handleUpdateTab(tab.id); }} className="flex items-center">
                 <input
@@ -150,9 +150,16 @@ export default function TabManager({ activeTab, onTabChange, isEditMode }) {
                 </button>
               </form>
             ) : (
-              <>
+              <div className="relative group">
                 <button
                   onClick={() => onTabChange(tab.id)}
+                  onContextMenu={(e) => {
+                    if (isEditMode) {
+                      e.preventDefault();
+                      setEditingTab(tab.id);
+                      setEditingName(tab.name);
+                    }
+                  }}
                   className={`px-4 py-2 rounded-md transition-colors whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'bg-blue-600 text-white'
@@ -160,36 +167,41 @@ export default function TabManager({ activeTab, onTabChange, isEditMode }) {
                   }`}
                 >
                   {tab.name}
+                  {/* Indicateur de modification en mode édition */}
+                  {isEditMode && tabs.length > 1 && (
+                    <span className="ml-2 text-xs opacity-60">•</span>
+                  )}
                 </button>
-                {/* Actions d'édition - visibles seulement en mode édition */}
+                
+                {/* Menu contextuel - visible seulement en mode édition au survol */}
                 {isEditMode && (
-                  <div className="flex items-center ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
                     <button
                       onClick={() => {
                         setEditingTab(tab.id);
                         setEditingName(tab.name);
                       }}
-                      className="p-1 text-gray-500 hover:text-gray-700"
-                      title="Modifier"
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
+                      Renommer
                     </button>
                     {tabs.length > 1 && (
                       <button
                         onClick={() => handleDeleteTab(tab.id)}
-                        className="p-1 text-red-500 hover:text-red-700"
-                        title="Supprimer"
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
+                        Supprimer
                       </button>
                     )}
                   </div>
                 )}
-              </>
+              </div>
             )}
           </div>
         ))}
