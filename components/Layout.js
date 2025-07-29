@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
 import { Toaster } from 'react-hot-toast';
 
-export default function Layout({ children, isEditMode, onToggleEditMode }) {
+export default function Layout({ children, isEditMode, onToggleEditMode, onAddFavori }) {
   const router = useRouter();
   const [username, setUsername] = useState('');
 
@@ -55,6 +55,19 @@ export default function Layout({ children, isEditMode, onToggleEditMode }) {
 
             {/* Menu utilisateur - toujours visible */}
             <div className="flex items-center space-x-4">
+              {/* Bouton Ajouter un favori - visible seulement en mode édition */}
+              {isEditMode && onAddFavori && (
+                <button
+                  onClick={onAddFavori}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Ajouter un favori
+                </button>
+              )}
+              
               {/* Bouton Modifier si la prop est passée */}
               {onToggleEditMode && (
                 <button

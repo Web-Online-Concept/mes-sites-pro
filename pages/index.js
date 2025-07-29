@@ -206,7 +206,11 @@ export default function HomePage() {
   }
 
   return (
-    <Layout isEditMode={isEditMode} onToggleEditMode={() => setIsEditMode(!isEditMode)}>
+    <Layout 
+      isEditMode={isEditMode} 
+      onToggleEditMode={() => setIsEditMode(!isEditMode)}
+      onAddFavori={() => setIsAddingBookmark(true)}
+    >
       <Head>
         <title>Mes Favoris</title>
         <meta name="description" content="Organisez vos sites favoris par onglets" />
@@ -219,41 +223,24 @@ export default function HomePage() {
         {/* Contenu principal */}
         {activeTab && (
           <div className="bg-white rounded-lg shadow-sm p-6">
-            {/* Bouton ajouter un favori - visible seulement en mode édition */}
-            {isEditMode && (
-              <div className="mb-6 flex justify-end">
-                {isAddingBookmark ? (
-                  <button
-                    onClick={() => {
-                      setIsAddingBookmark(false);
-                      setNewBookmark({ url: '', title: '', description: '' });
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    Fermer
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setIsAddingBookmark(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Ajouter un favori
-                  </button>
-                )}
-              </div>
-            )}
-
             {/* Formulaire d'ajout */}
             {isAddingBookmark && (
               <div className="mb-6 fade-in">
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Ajouter un nouveau favori</h3>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold text-gray-800">Ajouter un nouveau favori</h3>
+                    <button
+                      onClick={() => {
+                        setIsAddingBookmark(false);
+                        setNewBookmark({ url: '', title: '', description: '' });
+                      }}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
                   <form onSubmit={handleAddBookmark} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
