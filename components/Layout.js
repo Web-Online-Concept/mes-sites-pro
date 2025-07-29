@@ -43,7 +43,7 @@ export default function Layout({ children, isEditMode, onToggleEditMode, onAddFa
       <Toaster position="top-right" />
       
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-gradient-to-r from-blue-50 to-indigo-50 shadow-sm border-b border-blue-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Titre et utilisateur */}
