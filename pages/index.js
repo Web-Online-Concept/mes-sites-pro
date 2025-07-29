@@ -33,6 +33,7 @@ export default function HomePage() {
   const [isAddingBookmark, setIsAddingBookmark] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSavingBookmark, setIsSavingBookmark] = useState(false);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' ou 'list'
   const [newBookmark, setNewBookmark] = useState({
     url: '',
     title: '',
@@ -216,6 +217,8 @@ export default function HomePage() {
       isEditMode={isEditMode} 
       onToggleEditMode={() => setIsEditMode(!isEditMode)}
       onAddFavori={() => setIsAddingBookmark(true)}
+      viewMode={viewMode}
+      onToggleViewMode={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
     >
       <Head>
         <title>Mes Favoris</title>
@@ -429,7 +432,10 @@ export default function HomePage() {
                               items={mainBookmarks.map(b => b.id)}
                               strategy={verticalListSortingStrategy}
                             >
-                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                              <div className={viewMode === 'grid' 
+                                ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3"
+                                : "flex flex-col gap-2"
+                              }>
                                 {mainBookmarks.map((bookmark) => (
                                   <BookmarkCard
                                     key={bookmark.id}
@@ -438,6 +444,7 @@ export default function HomePage() {
                                     onDelete={handleDeleteBookmark}
                                     isEditMode={isEditMode}
                                     tabs={selectableTabs}
+                                    viewMode={viewMode}
                                   />
                                 ))}
                               </div>
@@ -482,7 +489,10 @@ export default function HomePage() {
                                   items={categoryBookmarks.map(b => b.id)}
                                   strategy={verticalListSortingStrategy}
                                 >
-                                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                                  <div className={viewMode === 'grid' 
+                                    ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3"
+                                    : "flex flex-col gap-2"
+                                  }>
                                     {categoryBookmarks.map((bookmark) => (
                                       <BookmarkCard
                                         key={bookmark.id}
@@ -491,6 +501,7 @@ export default function HomePage() {
                                         onDelete={handleDeleteBookmark}
                                         isEditMode={isEditMode}
                                         tabs={selectableTabs}
+                                        viewMode={viewMode}
                                       />
                                     ))}
                                   </div>

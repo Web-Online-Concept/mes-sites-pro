@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode, tabs }) {
+export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode, tabs, viewMode = 'grid' }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     title: bookmark.title,
@@ -110,6 +110,89 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
     }
   };
 
+  // Mode liste
+  if (viewMode === 'list') {
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 p-3 flex items-center gap-3"
+      >
+        {/* Favicon */}
+        <img
+          src={`https://www.google.com/s2/favicons?domain=${getDomain(bookmark.url)}&sz=32`}
+          alt=""
+          className="w-8 h-8 flex-shrink-0"
+          onError={(e) => {
+            e.target.style.display = 'none';
+          }}
+        />
+
+        {/* Infos */}
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-gray-900 truncate">{bookmark.title}</h3>
+          <p className="text-sm text-gray-500 truncate">{bookmark.url}</p>
+          {bookmark.description && (
+            <p className="text-xs text-gray-600 truncate mt-1">{bookmark.description}</p>
+          )}
+        </div>
+
+        {/* Actions */}
+        {isEditMode && (
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {tabs && tabs.length > 0 && (
+              <select
+                value={selectedTabId}
+                onChange={(e) => handleTabChange(e.target.value)}
+                className="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                title="Déplacer vers..."
+              >
+                {tabs.map((tab) => (
+                  <optgroup key={tab.id} label={tab.name}>
+                    <option value={tab.id}>{tab.name}</option>
+                    {tab.children && tab.children.map((subcat) => (
+                      <option key={subcat.id} value={subcat.id}>
+                        &nbsp;&nbsp;└ {subcat.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            )}
+            <button
+              onClick={() => setIsEditing(true)}
+              className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+              title="Modifier"
+            >
+              ✏️
+            </button>
+            <button
+              onClick={handleDelete}
+              className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
+              title="Supprimer"
+            >
+              🗑️
+            </button>
+          </div>
+        )}
+
+        {/* Lien */}
+        <a
+          href={bookmark.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+          title="Ouvrir le lien"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </a>
+      </div>
+    );
+  }
+
+  // Mode grille (existant)
   return (
     <div
       ref={setNodeRef}

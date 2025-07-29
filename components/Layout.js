@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
 import { Toaster } from 'react-hot-toast';
 
-export default function Layout({ children, isEditMode, onToggleEditMode, onAddFavori }) {
+export default function Layout({ children, isEditMode, onToggleEditMode, onAddFavori, viewMode, onToggleViewMode }) {
   const router = useRouter();
   const [username, setUsername] = useState('');
 
@@ -55,6 +55,25 @@ export default function Layout({ children, isEditMode, onToggleEditMode, onAddFa
 
             {/* Menu utilisateur - toujours visible */}
             <div className="flex items-center space-x-4">
+              {/* Bouton de vue Grille/Liste */}
+              {onToggleViewMode && (
+                <button
+                  onClick={onToggleViewMode}
+                  className="flex items-center gap-1 px-3 py-2 bg-white text-gray-700 rounded-md hover:bg-gray-100 transition-colors text-sm border border-gray-300"
+                  title={viewMode === 'grid' ? 'Passer en vue liste' : 'Passer en vue grille'}
+                >
+                  {viewMode === 'grid' ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                  )}
+                </button>
+              )}
+              
               {/* Bouton Ajouter un favori - TOUJOURS visible */}
               {onAddFavori && (
                 <button
