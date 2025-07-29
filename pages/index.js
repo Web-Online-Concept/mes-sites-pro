@@ -48,12 +48,25 @@ export default function HomePage() {
     setLoading(false);
   }, []); // Pas de dépendances pour éviter les boucles
   
+  // Charger les tabs et bookmarks au démarrage
   useEffect(() => {
+    const fetchTabs = async () => {
+      try {
+        const response = await fetch('/api/tabs');
+        if (response.ok) {
+          const data = await response.json();
+          setTabs(data);
+        }
+      } catch (error) {
+        console.error('Error fetching tabs:', error);
+      }
+    };
+
     if (isAuthenticated) {
+      fetchTabs();
       fetchBookmarks();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]); // On ne recharge plus quand activeTab change
+  }, [isAuthenticated]);
 
   const fetchBookmarks = async () => {
     setLoading(true);
