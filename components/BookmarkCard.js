@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode }) {
+export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode, tabs }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     title: bookmark.title,
@@ -11,6 +11,7 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode 
   });
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
+  const [selectedTabId, setSelectedTabId] = useState(bookmark.tabId);
 
   const {
     attributes,
@@ -49,7 +50,34 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode 
     }
   };
 
-  const handleDelete = async () => {
+  const handleTabChange = async (newTabId) => {
+    if (newTabId === bookmark.tabId) return;
+
+    try {
+      const response = await fetch('/api/bookmarks/move', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookmarkId: bookmark.id,
+          newTabId: newTabId
+        }),
+      });
+
+      if (response.ok) {
+        const updatedBookmark = await response.json();
+        onUpdate(updatedBookmark);
+        setSelectedTabId(newTabId);
+        toast.success('Favori déplacé avec succès');
+      } else {
+        toast.error('Erreur lors du déplacement');
+        setSelectedTabId(bookmark.tabId);
+      }
+    } catch (error) {
+      console.error('Move error:', error);
+      toast.error('Erreur lors du déplacement');
+      setSelectedTabId(bookmark.tabId);
+    }
+  };
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce favori ?')) {
       return;
     }
@@ -242,6 +270,22 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode 
                 <p className="text-xs text-gray-500 truncate" title={bookmark.url}>
                   {getDomain(bookmark.url)}
                 </p>
+                
+                {/* Sélecteur de catégorie */}
+                {tabs && tabs.length > 1 && (
+                  <select
+                    value={selectedTabId}
+                    onChange={(e) => handleTabChange(e.target.value)}
+                    className="mt-1 text-xs border border-gray-200 rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    title="Déplacer vers..."
+                  >
+                    {tabs.map((tab) => (
+                      <option key={tab.id} value={tab.id}>
+                        {tab.icon} {tab.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 
                 {/* Description si présente */}
                 {bookmark.description && (

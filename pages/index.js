@@ -25,6 +25,7 @@ import toast from 'react-hot-toast';
 export default function HomePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState(null);
+  const [tabs, setTabs] = useState([]);
   const [bookmarks, setBookmarks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -199,7 +200,7 @@ export default function HomePage() {
 
       <div className="space-y-6">
         {/* Gestion des onglets */}
-        <TabManager activeTab={activeTab} onTabChange={setActiveTab} isEditMode={isEditMode} />
+        <TabManager activeTab={activeTab} onTabChange={setActiveTab} isEditMode={isEditMode} onTabsChange={setTabs} />
 
         {/* Contenu principal */}
         {activeTab && (

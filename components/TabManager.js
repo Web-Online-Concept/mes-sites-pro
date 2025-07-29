@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
-export default function TabManager({ activeTab, onTabChange, isEditMode }) {
+export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsChange }) {
   const [tabs, setTabs] = useState([]);
   const [isCreating, setIsCreating] = useState(false);
   const [newTabName, setNewTabName] = useState('');
@@ -18,6 +18,9 @@ export default function TabManager({ activeTab, onTabChange, isEditMode }) {
       if (response.ok) {
         const data = await response.json();
         setTabs(data);
+        if (onTabsChange) {
+          onTabsChange(data);
+        }
         
         // Sélectionner le premier onglet par défaut
         if (data.length > 0 && !activeTab) {
