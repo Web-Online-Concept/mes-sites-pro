@@ -257,66 +257,89 @@ export default function HomePage() {
 
             {/* Formulaire d'ajout */}
             {isAddingBookmark && (
-              <form onSubmit={handleAddBookmark} className="mb-6 space-y-4 p-4 bg-gray-50 rounded-lg">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      URL *
-                    </label>
-                    <input
-                      type="url"
-                      value={newBookmark.url}
-                      onChange={(e) => handleUrlChange(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      placeholder="https://example.com"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Titre *
-                    </label>
-                    <input
-                      type="text"
-                      value={newBookmark.title}
-                      onChange={(e) => setNewBookmark({ ...newBookmark, title: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      placeholder="Nom du site"
-                      required
-                    />
-                  </div>
+              <div className="mb-6 fade-in">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Ajouter un nouveau favori</h3>
+                  <form onSubmit={handleAddBookmark} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          URL du site *
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="url"
+                            value={newBookmark.url}
+                            onChange={(e) => handleUrlChange(e.target.value)}
+                            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="https://example.com"
+                            required
+                          />
+                          <svg className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Titre du site *
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={newBookmark.title}
+                            onChange={(e) => setNewBookmark({ ...newBookmark, title: e.target.value })}
+                            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Mon site préféré"
+                            required
+                          />
+                          <svg className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Description (optionnel)
+                      </label>
+                      <div className="relative">
+                        <textarea
+                          value={newBookmark.description}
+                          onChange={(e) => setNewBookmark({ ...newBookmark, description: e.target.value })}
+                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                          placeholder="Une brève description du site..."
+                          rows="2"
+                        />
+                        <svg className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        type="submit"
+                        className="btn-primary"
+                      >
+                        <svg className="w-4 h-4 mr-2 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Ajouter le favori
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAddingBookmark(false);
+                          setNewBookmark({ url: '', title: '', description: '' });
+                        }}
+                        className="btn-secondary"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  </form>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description (optionnel)
-                  </label>
-                  <textarea
-                    value={newBookmark.description}
-                    onChange={(e) => setNewBookmark({ ...newBookmark, description: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    placeholder="Description du site"
-                    rows="2"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
-                  >
-                    Ajouter
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsAddingBookmark(false);
-                      setNewBookmark({ url: '', title: '', description: '' });
-                    }}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
-                  >
-                    Annuler
-                  </button>
-                </div>
-              </form>
+              </div>
             )}
 
             {/* Liste des favoris */}

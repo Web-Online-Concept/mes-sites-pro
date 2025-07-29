@@ -10,6 +10,7 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode 
     description: bookmark.description || ''
   });
   const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
 
   const {
     attributes,
@@ -84,7 +85,7 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode 
     <div
       ref={setNodeRef}
       style={style}
-      className="bookmark-card bg-white rounded-lg shadow-sm hover:shadow-md overflow-hidden transition-all border border-gray-200 w-full"
+      className="bookmark-card fade-in bg-white rounded-lg shadow-sm hover:shadow-lg overflow-hidden transition-all border border-gray-200 w-full"
     >
       {/* Zone draggable et image combinées */}
       <div className="relative">
@@ -108,14 +109,27 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode 
           rel="noopener noreferrer"
           className="block relative aspect-video bg-gray-50 hover:bg-gray-100 transition-colors group"
         >
+          {/* Loader pendant le chargement */}
+          {imageLoading && !imageError && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+              <div className="animate-pulse">
+                <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            </div>
+          )}
+          
           {bookmark.screenshot && !imageError ? (
             <img
               src={bookmark.screenshot}
               alt={bookmark.title}
               className="w-full h-full object-cover"
+              onLoad={() => setImageLoading(false)}
               onError={() => {
                 console.log('Image failed to load:', bookmark.screenshot);
                 setImageError(true);
+                setImageLoading(false);
               }}
             />
           ) : (
