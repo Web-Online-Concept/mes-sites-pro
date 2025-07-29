@@ -11,7 +11,43 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
   });
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
+  const [isBlankImage, setIsBlankImage] = useState(false);
   const [selectedTabId, setSelectedTabId] = useState(bookmark.tabId);
+
+  // Détecter si l'image est blanche/vide
+  const checkIfImageIsBlank = (imgElement) => {
+    // Créer un canvas temporaire
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Taille réduite pour l'analyse (plus rapide)
+    const sampleSize = 50;
+    canvas.width = sampleSize;
+    canvas.height = sampleSize;
+    
+    // Dessiner l'image redimensionnée
+    ctx.drawImage(imgElement, 0, 0, sampleSize, sampleSize);
+    
+    // Obtenir les données de pixels
+    const imageData = ctx.getImageData(0, 0, sampleSize, sampleSize);
+    const data = imageData.data;
+    
+    // Vérifier si tous les pixels sont blancs ou presque blancs
+    let isAllWhite = true;
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      
+      // Si un pixel n'est pas blanc (avec une tolérance)
+      if (r < 250 || g < 250 || b < 250) {
+        isAllWhite = false;
+        break;
+      }
+    }
+    
+    return isAllWhite;
+  };
 
   const {
     attributes,
@@ -151,12 +187,18 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
             </div>
           )}
           
-          {bookmark.screenshot && !imageError ? (
+          {bookmark.screenshot && !imageError && !isBlankImage ? (
             <img
               src={bookmark.screenshot}
               alt={bookmark.title}
               className="w-full h-full object-cover"
-              onLoad={() => setImageLoading(false)}
+              onLoad={(e) => {
+                setImageLoading(false);
+                // Vérifier si l'image est blanche
+                if (checkIfImageIsBlank(e.target)) {
+                  setIsBlankImage(true);
+                }
+              }}
               onError={() => {
                 console.log('Image failed to load:', bookmark.screenshot);
                 setImageError(true);
