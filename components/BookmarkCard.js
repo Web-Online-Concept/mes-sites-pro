@@ -1,4 +1,57 @@
-import { useState } from 'react';
+{bookmark.screenshot && !imageError ? (
+          <img
+            src={bookmark.screenshot}
+            alt={bookmark.title}
+            className="w-full h-full object-cover"
+            onError={() => {
+              console.log('Image failed to load:', bookmark.screenshot);
+              setImageError(true);
+            }}
+          />
+        ) : (
+          <div className="relative h-full">
+            <img
+              src="/default-preview.png"
+              alt="Aperçu non disponible"
+              className="w-full h-full object-cover"
+            />
+            {/* Overlay avec favicon et domaine */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center bg-white bg-opacity-90 rounded-lg p-3">
+                <img
+                  src={`https://www.google.com/s2/favicons?domain=${getDomain(bookmark.url)}&sz=32`}
+                  alt=""
+                  className="w-8 h-8 mx-auto mb-1"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+                <p className="text-xs text-gray-700 font-medium">{getDomain(bookmark.url)}</p>
+              </div>
+            </div>
+          </div>
+        )}('Image failed to load:', bookmark.screenshot);
+              setImageError(true);
+            }}
+          />
+        ) : (
+          <div className="relative h-full">
+            <img
+              src="/default-preview.png"
+              alt="Aperçu non disponible"
+              className="w-full h-full object-cover opacity-80"
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20">
+              <div className="text-center">
+                <img
+                  src={`https://www.google.com/s2/favicons?domain=${getDomain(bookmark.url)}&sz=32`}
+                  alt=""
+                  className="w-8 h-8 mx-auto mb-2 bg-white rounded p-1"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+                <p className="text-white text-sm font-medium bg-black bg-opacity-50import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -98,12 +151,12 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete }) {
           </svg>
         </div>
       </div>
-      {/* Image de prévisualisation */}
+      {/* Image de prévisualisation - plus petite */}
       <a 
         href={bookmark.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="block relative h-32 bg-gray-50 hover:bg-gray-100 transition-colors group"
+        className="block relative h-24 bg-gray-50 hover:bg-gray-100 transition-colors group"
       >
         {bookmark.screenshot && !imageError ? (
           <img
