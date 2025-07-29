@@ -388,11 +388,8 @@ export default function HomePage() {
                   // Favoris sans sous-catégorie (directement dans l'onglet principal)
                   const mainBookmarks = bookmarksByCategory[activeTab] || [];
                   
-                  // Pour le sélecteur, on veut tous les onglets SAUF les sous-catégories de l'onglet actuel
-                  const selectableTabs = tabs.map(tab => ({
-                    ...tab,
-                    children: tab.id === activeTab ? tab.children : []
-                  }));
+                  // Pour le sélecteur, on veut TOUS les onglets avec TOUTES leurs sous-catégories
+                  const selectableTabs = tabs;
 
                   return (
                     <>
