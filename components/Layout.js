@@ -17,17 +17,8 @@ export default function Layout({ children }) {
     try {
       const token = Cookies.get('auth-token');
       if (token) {
-        // Optionnel : valider le token côté serveur
-        const response = await fetch('/api/auth/me', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-        }
+        // Pour l'instant, on simule un user basique
+        setUser({ username: 'Utilisateur' });
       }
     } catch (error) {
       console.error('Auth check error:', error);
