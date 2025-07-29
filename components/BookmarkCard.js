@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-export default function BookmarkCard({ bookmark, onUpdate, onDelete }) {
+export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     title: bookmark.title,
@@ -88,16 +88,18 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete }) {
     >
       {/* Zone draggable et image combinées */}
       <div className="relative">
-        {/* Poignée de drag discrète */}
-        <div 
-          {...attributes} 
-          {...listeners} 
-          className="absolute top-1 right-1 z-10 cursor-move p-1 bg-white bg-opacity-80 rounded hover:bg-opacity-100"
-        >
-          <svg className="w-3 h-3 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M7 2a2 2 0 11-4 0 2 2 0 014 0zM17 2a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0zM17 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-          </svg>
-        </div>
+        {/* Poignée de drag discrète - visible seulement en mode édition */}
+        {isEditMode && (
+          <div 
+            {...attributes} 
+            {...listeners} 
+            className="absolute top-1 right-1 z-10 cursor-move p-1 bg-white bg-opacity-80 rounded hover:bg-opacity-100"
+          >
+            <svg className="w-3 h-3 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M7 2a2 2 0 11-4 0 2 2 0 014 0zM17 2a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0zM17 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+          </div>
+        )}
 
         {/* Image de prévisualisation */}
         <a 
@@ -192,39 +194,48 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete }) {
           </div>
         ) : (
           <div>
-            {/* Titre et actions sur la même ligne */}
-            <div className="flex items-start justify-between gap-1 mb-1">
-              <h3 className="font-medium text-gray-900 truncate text-xs flex-1" title={bookmark.title}>
+            {/* Mode lecture - Titre centré uniquement */}
+            {!isEditMode ? (
+              <h3 className="font-medium text-gray-900 text-center text-sm" title={bookmark.title}>
                 {bookmark.title}
               </h3>
-              <div className="flex gap-0.5 flex-shrink-0">
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="p-0.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded text-xs"
-                  title="Modifier"
-                >
-                  ✏️
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="p-0.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded text-xs"
-                  title="Supprimer"
-                >
-                  🗑️
-                </button>
-              </div>
-            </div>
-            
-            {/* Domaine au lieu de l'URL complète */}
-            <p className="text-xs text-gray-500 truncate" title={bookmark.url}>
-              {getDomain(bookmark.url)}
-            </p>
-            
-            {/* Description si présente */}
-            {bookmark.description && (
-              <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                {bookmark.description}
-              </p>
+            ) : (
+              <>
+                {/* Mode édition - Layout complet */}
+                <div className="flex items-start justify-between gap-1 mb-1">
+                  <h3 className="font-medium text-gray-900 truncate text-xs flex-1" title={bookmark.title}>
+                    {bookmark.title}
+                  </h3>
+                  <div className="flex gap-0.5 flex-shrink-0">
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="p-0.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded text-xs"
+                      title="Modifier"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      className="p-0.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded text-xs"
+                      title="Supprimer"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Domaine au lieu de l'URL complète */}
+                <p className="text-xs text-gray-500 truncate" title={bookmark.url}>
+                  {getDomain(bookmark.url)}
+                </p>
+                
+                {/* Description si présente */}
+                {bookmark.description && (
+                  <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                    {bookmark.description}
+                  </p>
+                )}
+              </>
             )}
           </div>
         )}

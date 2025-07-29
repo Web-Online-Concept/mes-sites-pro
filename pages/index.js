@@ -29,6 +29,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAddingBookmark, setIsAddingBookmark] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [newBookmark, setNewBookmark] = useState({
     url: '',
     title: '',
@@ -206,79 +207,117 @@ export default function HomePage() {
             {/* Bouton ajouter un favori */}
             <div className="mb-6 flex justify-between items-center">
               <h2 className="text-xl font-semibold text-gray-800">Mes favoris</h2>
-              {isAddingBookmark ? (
-                <form onSubmit={handleAddBookmark} className="space-y-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        URL *
-                      </label>
-                      <input
-                        type="url"
-                        value={newBookmark.url}
-                        onChange={(e) => handleUrlChange(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        placeholder="https://example.com"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Titre *
-                      </label>
-                      <input
-                        type="text"
-                        value={newBookmark.title}
-                        onChange={(e) => setNewBookmark({ ...newBookmark, title: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        placeholder="Nom du site"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Description (optionnel)
-                    </label>
-                    <textarea
-                      value={newBookmark.description}
-                      onChange={(e) => setNewBookmark({ ...newBookmark, description: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      placeholder="Description du site"
-                      rows="2"
+              <div className="flex items-center gap-3">
+                {/* Bouton Mode Edition */}
+                <button
+                  onClick={() => setIsEditMode(!isEditMode)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                    isEditMode 
+                      ? 'bg-gray-600 text-white hover:bg-gray-700' 
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" 
                     />
-                  </div>
-                  <div className="flex gap-2">
+                  </svg>
+                  {isEditMode ? 'Mode lecture' : 'Modifier'}
+                </button>
+                
+                {/* Bouton Ajouter - visible seulement en mode édition */}
+                {isEditMode && (
+                  isAddingBookmark ? (
                     <button
-                      type="submit"
-                      className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
-                    >
-                      Ajouter
-                    </button>
-                    <button
-                      type="button"
                       onClick={() => {
                         setIsAddingBookmark(false);
                         setNewBookmark({ url: '', title: '', description: '' });
                       }}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors"
                     >
-                      Annuler
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Fermer
                     </button>
-                  </div>
-                </form>
-              ) : (
-                <button
-                  onClick={() => setIsAddingBookmark(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Ajouter un favori
-                </button>
-              )}
+                  ) : (
+                    <button
+                      onClick={() => setIsAddingBookmark(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Ajouter un favori
+                    </button>
+                  )
+                )}
+              </div>
             </div>
+
+            {/* Formulaire d'ajout */}
+            {isAddingBookmark && (
+              <form onSubmit={handleAddBookmark} className="mb-6 space-y-4 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      URL *
+                    </label>
+                    <input
+                      type="url"
+                      value={newBookmark.url}
+                      onChange={(e) => handleUrlChange(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="https://example.com"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Titre *
+                    </label>
+                    <input
+                      type="text"
+                      value={newBookmark.title}
+                      onChange={(e) => setNewBookmark({ ...newBookmark, title: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="Nom du site"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description (optionnel)
+                  </label>
+                  <textarea
+                    value={newBookmark.description}
+                    onChange={(e) => setNewBookmark({ ...newBookmark, description: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    placeholder="Description du site"
+                    rows="2"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+                  >
+                    Ajouter
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddingBookmark(false);
+                      setNewBookmark({ url: '', title: '', description: '' });
+                    }}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </form>
+            )}
 
             {/* Liste des favoris */}
             {loading ? (
@@ -310,6 +349,7 @@ export default function HomePage() {
                         bookmark={bookmark}
                         onUpdate={handleUpdateBookmark}
                         onDelete={handleDeleteBookmark}
+                        isEditMode={isEditMode}
                       />
                     ))}
                   </div>
