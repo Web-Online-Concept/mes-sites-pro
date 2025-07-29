@@ -150,42 +150,44 @@ export default function TabManager({ activeTab, onTabChange, isEditMode }) {
                 </button>
               </form>
             ) : (
-              <div className="flex items-center">
-                <button
-                  onClick={() => onTabChange(tab.id)}
-                  className={`px-4 py-2 rounded-md transition-colors whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {tab.name}
-                </button>
-                {/* Actions visibles seulement en mode édition */}
-                {isEditMode && (
-                  <>
-                    <button
-                      onClick={() => {
+              <button
+                onClick={() => onTabChange(tab.id)}
+                className={`group flex items-center gap-2 px-4 py-2 rounded-md transition-colors whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {tab.name}
+                {/* Actions intégrées dans l'onglet actif seulement */}
+                {isEditMode && activeTab === tab.id && (
+                  <div className="flex items-center gap-1 ml-2">
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setEditingTab(tab.id);
                         setEditingName(tab.name);
                       }}
-                      className="ml-1 p-1 text-gray-500 hover:text-gray-700"
+                      className="hover:bg-blue-700 rounded p-0.5 cursor-pointer"
                       title="Modifier"
                     >
                       ✏️
-                    </button>
+                    </span>
                     {tabs.length > 1 && (
-                      <button
-                        onClick={() => handleDeleteTab(tab.id)}
-                        className="p-1 text-red-500 hover:text-red-700"
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteTab(tab.id);
+                        }}
+                        className="hover:bg-blue-700 rounded p-0.5 cursor-pointer"
                         title="Supprimer"
                       >
                         🗑️
-                      </button>
+                      </span>
                     )}
-                  </>
+                  </div>
                 )}
-              </div>
+              </button>
             )}
           </div>
         ))}
