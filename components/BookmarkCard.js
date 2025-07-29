@@ -57,6 +57,7 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
       const response = await fetch('/api/bookmarks/move', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           bookmarkId: bookmark.id,
           newTabId: newTabId
