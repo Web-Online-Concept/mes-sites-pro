@@ -1,59 +1,49 @@
-import { prisma } from '../../../lib/prisma';
-import { verifyPassword, generateToken } from '../../../lib/auth';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import prisma from '../../../lib/prisma';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Méthode non autorisée' });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { email, password } = req.body;
+  const { username, password } = req.body;
 
-  // Validation
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email et mot de passe requis' });
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username et mot de passe requis' });
   }
 
   try {
-    // Trouver l'utilisateur par email
+    // Trouver l'utilisateur
     const user = await prisma.user.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        password: true,
-      }
+      where: { username },
     });
 
     if (!user) {
-      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+      return res.status(401).json({ error: 'Identifiants invalides' });
     }
 
     // Vérifier le mot de passe
-    const isPasswordValid = await verifyPassword(password, user.password);
-
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) {
+      return res.status(401).json({ error: 'Identifiants invalides' });
     }
 
-    // Générer le token JWT
-    const token = generateToken(user.id);
+    // Créer le token JWT
+    const token = jwt.sign(
+      { userId: user.id, username: user.username },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
 
-    // Ne PAS définir de cookie côté serveur
-    // Le client va le gérer
-
-    // Retourner les informations de l'utilisateur (sans le mot de passe)
-    res.status(200).json({
-      message: 'Connexion réussie',
+    // Retourner le token ET le username
+    res.status(200).json({ 
       token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-      }
+      username: user.username,
+      message: 'Connexion réussie' 
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Erreur lors de la connexion' });
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 }
