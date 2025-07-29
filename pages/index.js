@@ -19,6 +19,7 @@ import {
 import Layout from '../components/Layout.js';
 import TabManager from '../components/TabManager.js';
 import BookmarkCard from '../components/BookmarkCard.js';
+import SubcategoryManager from '../components/SubcategoryManager.js';
 import ExportImport from '../components/ExportImport.js';
 import toast from 'react-hot-toast';
 
@@ -223,6 +224,22 @@ export default function HomePage() {
         {/* Contenu principal */}
         {activeTab && (
           <div className="bg-white rounded-lg shadow-sm p-6">
+            {/* Gestion des sous-catégories - visible seulement en mode édition */}
+            {isEditMode && (
+              <SubcategoryManager
+                parentTabId={activeTab}
+                subcategories={tabs.find(t => t.id === activeTab)?.children || []}
+                onSubcategoriesChange={(newSubcategories) => {
+                  setTabs(tabs.map(tab => 
+                    tab.id === activeTab 
+                      ? { ...tab, children: newSubcategories }
+                      : tab
+                  ));
+                }}
+                isEditMode={isEditMode}
+              />
+            )}
+
             {/* Formulaire d'ajout */}
             {isAddingBookmark && (
               <div className="mb-6 fade-in">
@@ -343,31 +360,116 @@ export default function HomePage() {
                 )}
               </div>
             ) : (
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext
-                  items={bookmarks.filter(b => b.tabId === activeTab).map(b => b.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                    {bookmarks
-                      .filter(b => b.tabId === activeTab)
-                      .map((bookmark) => (
-                        <BookmarkCard
-                          key={bookmark.id}
-                          bookmark={bookmark}
-                          onUpdate={handleUpdateBookmark}
-                          onDelete={handleDeleteBookmark}
-                          isEditMode={isEditMode}
-                          tabs={tabs}
-                        />
-                      ))}
-                  </div>
-                </SortableContext>
-              </DndContext>
+              <div>
+                {/* Récupérer l'onglet actif et ses sous-catégories */}
+                {(() => {
+                  const currentTab = tabs.find(t => t.id === activeTab);
+                  const subcategories = currentTab?.children || [];
+                  const allTabIds = [activeTab, ...subcategories.map(s => s.id)];
+                  
+                  // Grouper les favoris par catégorie
+                  const bookmarksByCategory = {};
+                  bookmarks
+                    .filter(b => allTabIds.includes(b.tabId))
+                    .forEach(bookmark => {
+                      if (!bookmarksByCategory[bookmark.tabId]) {
+                        bookmarksByCategory[bookmark.tabId] = [];
+                      }
+                      bookmarksByCategory[bookmark.tabId].push(bookmark);
+                    });
+
+                  // Favoris sans sous-catégorie (directement dans l'onglet principal)
+                  const mainBookmarks = bookmarksByCategory[activeTab] || [];
+
+                  return (
+                    <>
+                      {/* Favoris principaux (sans sous-catégorie) */}
+                      {mainBookmarks.length > 0 && (
+                        <div className="mb-8">
+                          {subcategories.length > 0 && (
+                            <h3 className="text-lg font-semibold text-gray-700 mb-4">Non classés</h3>
+                          )}
+                          <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
+                          >
+                            <SortableContext
+                              items={mainBookmarks.map(b => b.id)}
+                              strategy={verticalListSortingStrategy}
+                            >
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                                {mainBookmarks.map((bookmark) => (
+                                  <BookmarkCard
+                                    key={bookmark.id}
+                                    bookmark={bookmark}
+                                    onUpdate={handleUpdateBookmark}
+                                    onDelete={handleDeleteBookmark}
+                                    isEditMode={isEditMode}
+                                    tabs={[currentTab, ...subcategories]}
+                                  />
+                                ))}
+                              </div>
+                            </SortableContext>
+                          </DndContext>
+                        </div>
+                      )}
+
+                      {/* Favoris par sous-catégorie */}
+                      {subcategories.map(subcategory => {
+                        const categoryBookmarks = bookmarksByCategory[subcategory.id] || [];
+                        
+                        if (categoryBookmarks.length === 0 && !isEditMode) {
+                          return null; // Ne pas afficher les sous-catégories vides en mode lecture
+                        }
+
+                        return (
+                          <div key={subcategory.id} className="mb-8">
+                            <div className="flex items-center justify-between mb-4">
+                              <h3 className="text-lg font-semibold text-gray-700">{subcategory.name}</h3>
+                              {isEditMode && (
+                                <span className="text-sm text-gray-500">
+                                  {categoryBookmarks.length} favori{categoryBookmarks.length > 1 ? 's' : ''}
+                                </span>
+                              )}
+                            </div>
+                            
+                            {categoryBookmarks.length === 0 ? (
+                              <div className="text-center py-8 bg-gray-50 rounded-lg">
+                                <p className="text-gray-500 text-sm">Aucun favori dans cette sous-catégorie</p>
+                              </div>
+                            ) : (
+                              <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCenter}
+                                onDragEnd={handleDragEnd}
+                              >
+                                <SortableContext
+                                  items={categoryBookmarks.map(b => b.id)}
+                                  strategy={verticalListSortingStrategy}
+                                >
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                                    {categoryBookmarks.map((bookmark) => (
+                                      <BookmarkCard
+                                        key={bookmark.id}
+                                        bookmark={bookmark}
+                                        onUpdate={handleUpdateBookmark}
+                                        onDelete={handleDeleteBookmark}
+                                        isEditMode={isEditMode}
+                                        tabs={[currentTab, ...subcategories]}
+                                      />
+                                    ))}
+                                  </div>
+                                </SortableContext>
+                              </DndContext>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </>
+                  );
+                })()}
+              </div>
             )}
           </div>
         )}

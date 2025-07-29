@@ -18,15 +18,26 @@ export default async function handler(req, res) {
   }
 }
 
-// Récupérer tous les onglets de l'utilisateur
+// Récupérer tous les onglets de l'utilisateur avec leurs sous-catégories
 async function getTabs(userId, res) {
   try {
     const tabs = await prisma.tab.findMany({
-      where: { userId },
+      where: { 
+        userId,
+        parentId: null // Seulement les onglets principaux
+      },
       orderBy: { order: 'asc' },
       include: {
         _count: {
           select: { bookmarks: true }
+        },
+        children: {
+          orderBy: { order: 'asc' },
+          include: {
+            _count: {
+              select: { bookmarks: true }
+            }
+          }
         }
       }
     });
@@ -38,29 +49,55 @@ async function getTabs(userId, res) {
   }
 }
 
-// Créer un nouvel onglet
+// Créer un nouvel onglet ou sous-catégorie
 async function createTab(userId, req, res) {
-  const { name } = req.body;
+  const { name, parentId = null } = req.body;
 
   if (!name || !name.trim()) {
-    return res.status(400).json({ error: 'Le nom de l\'onglet est requis' });
+    return res.status(400).json({ error: 'Le nom est requis' });
   }
 
   try {
-    // Récupérer le nombre d'onglets pour définir l'ordre
+    // Si c'est une sous-catégorie, vérifier que le parent existe et appartient à l'utilisateur
+    if (parentId) {
+      const parentTab = await prisma.tab.findFirst({
+        where: {
+          id: parentId,
+          userId,
+          parentId: null // S'assurer que le parent est bien un onglet principal
+        }
+      });
+
+      if (!parentTab) {
+        return res.status(404).json({ error: 'Onglet parent non trouvé' });
+      }
+    }
+
+    // Récupérer le nombre d'onglets/sous-catégories pour définir l'ordre
     const tabCount = await prisma.tab.count({
-      where: { userId }
+      where: { 
+        userId,
+        parentId: parentId // Compter seulement les éléments du même niveau
+      }
     });
 
     const tab = await prisma.tab.create({
       data: {
         name: name.trim(),
         userId,
+        parentId,
         order: tabCount,
       },
       include: {
         _count: {
           select: { bookmarks: true }
+        },
+        children: parentId ? undefined : {
+          include: {
+            _count: {
+              select: { bookmarks: true }
+            }
+          }
         }
       }
     });
@@ -68,6 +105,6 @@ async function createTab(userId, req, res) {
     res.status(201).json(tab);
   } catch (error) {
     console.error('Create tab error:', error);
-    res.status(500).json({ error: 'Erreur lors de la création de l\'onglet' });
+    res.status(500).json({ error: 'Erreur lors de la création' });
   }
 }
