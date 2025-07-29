@@ -183,9 +183,9 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
             ) : (
               <button
                 onClick={() => onTabChange(tab.id)}
-                className={`group flex items-center gap-2 px-5 py-2.5 rounded-lg transition-all duration-200 whitespace-nowrap font-medium ${
+                className={`group flex items-center gap-2 px-5 py-2.5 rounded-lg transition-colors duration-200 whitespace-nowrap font-medium ${
                   activeTab === tab.id
-                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg transform scale-105'
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
                     : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 hover:border-gray-400 hover:shadow-sm'
                 }`}
               >
