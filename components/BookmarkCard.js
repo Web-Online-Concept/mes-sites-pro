@@ -78,6 +78,8 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
       setSelectedTabId(bookmark.tabId);
     }
   };
+
+  const handleDelete = async () => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce favori ?')) {
       return;
     }
