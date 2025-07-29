@@ -1,4 +1,4 @@
-import { verifyToken } from '../../../lib/auth';
+import { getUserFromRequest } from '../../../lib/auth';
 import prisma from '../../../lib/prisma';
 
 export default async function handler(req, res) {
@@ -7,8 +7,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const user = await verifyToken(req);
-    if (!user) {
+    const userId = await getUserFromRequest(req);
+    if (!userId) {
       return res.status(401).json({ error: 'Non authentifié' });
     }
 
@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     const bookmark = await prisma.bookmark.findFirst({
       where: {
         id: bookmarkId,
-        userId: user.userId,
+        userId: userId,
       },
     });
 
@@ -34,7 +34,7 @@ export default async function handler(req, res) {
     const targetTab = await prisma.tab.findFirst({
       where: {
         id: newTabId,
-        userId: user.userId,
+        userId: userId,
       },
     });
 
