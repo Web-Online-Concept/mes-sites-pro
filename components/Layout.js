@@ -49,7 +49,7 @@ export default function Layout({ children, isEditMode, onToggleEditMode }) {
             {/* Titre et utilisateur */}
             <div className="flex items-center">
               <h1 className="text-xl font-bold text-gray-800">
-                Tableau des sites favoris {username && `de ${username}`}
+                Sites favoris {username && `de ${username}`}
               </h1>
             </div>
 
