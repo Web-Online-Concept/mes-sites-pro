@@ -84,19 +84,27 @@ async function createBookmark(userId, req, res) {
       where: { tabId }
     });
 
-    // Essayer de récupérer l'image OG du site
+    // Essayer plusieurs services de screenshot
     let screenshot = null;
+    
+    // Option 1: Essayer l'image OG du site
     try {
       const metaResponse = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
       if (metaResponse.ok) {
         const metaData = await metaResponse.json();
-        screenshot = metaData.data?.image?.url || metaData.data?.screenshot?.url || null;
+        screenshot = metaData.data?.image?.url || null;
       }
     } catch (error) {
-      console.log('Failed to get screenshot');
+      console.log('Microlink failed');
     }
 
-    // Créer le favori avec le vrai screenshot
+    // Option 2: Si pas d'image OG, utiliser un service de screenshot
+    if (!screenshot) {
+      // Service gratuit qui marche bien
+      screenshot = `https://s0.wp.com/mshots/v1/${encodeURIComponent(url)}?w=400&h=300`;
+    }
+
+    // Créer le favori avec le screenshot
     const bookmark = await prisma.bookmark.create({
       data: {
         url,
@@ -105,7 +113,7 @@ async function createBookmark(userId, req, res) {
         tabId,
         userId,
         order: bookmarkCount,
-        screenshot: screenshot || `https://image.thum.io/get/width/400/crop/600/${encodeURIComponent(url)}`,
+        screenshot,
       },
       include: {
         tab: {
