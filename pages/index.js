@@ -414,9 +414,9 @@ export default function HomePage() {
                     <>
                       {/* Favoris principaux (sans sous-catégorie) */}
                       {mainBookmarks.length > 0 && (
-                        <div className="mb-8">
+                        <div className="mb-8 bg-gray-50 rounded-xl p-4 border border-gray-200">
                           {subcategories.length > 0 && (
-                            <div className="mb-4 pb-2 border-b border-gray-200">
+                            <div className="mb-4 pb-2 border-b border-gray-300">
                               <h3 className="text-lg font-semibold text-gray-600">📌 Non classés</h3>
                             </div>
                           )}
@@ -455,21 +455,21 @@ export default function HomePage() {
                         }
 
                         return (
-                          <div key={subcategory.id} className="mb-8">
-                            <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-blue-200">
+                          <div key={subcategory.id} className="mb-8 bg-blue-50 rounded-xl p-4 border border-blue-200">
+                            <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-blue-300">
                               <h3 className="text-xl font-bold text-blue-700">
                                 <span className="mr-2">🌐</span>
                                 {subcategory.name}
                               </h3>
                               {isEditMode && (
-                                <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                <span className="text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
                                   {categoryBookmarks.length} favori{categoryBookmarks.length > 1 ? 's' : ''}
                                 </span>
                               )}
                             </div>
                             
                             {categoryBookmarks.length === 0 ? (
-                              <div className="text-center py-8 bg-blue-50 rounded-lg border border-blue-100">
+                              <div className="text-center py-8 bg-white rounded-lg border border-blue-100">
                                 <p className="text-gray-500 text-sm">Aucun favori dans cette sous-catégorie</p>
                               </div>
                             ) : (
