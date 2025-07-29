@@ -135,9 +135,11 @@ export default function TabManager({ activeTab, onTabChange, isEditMode }) {
                   type="text"
                   value={editingName}
                   onChange={(e) => setEditingName(e.target.value)}
-                  onBlur={() => {
-                    setEditingTab(null);
-                    setEditingName('');
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setEditingTab(null);
+                      setEditingName('');
+                    }
                   }}
                   className="px-3 py-1 border border-blue-500 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   autoFocus
@@ -147,6 +149,16 @@ export default function TabManager({ activeTab, onTabChange, isEditMode }) {
                   className="px-2 py-1 bg-blue-500 text-white rounded-r-md hover:bg-blue-600"
                 >
                   ✓
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingTab(null);
+                    setEditingName('');
+                  }}
+                  className="px-2 py-1 bg-gray-300 text-gray-700 rounded-r-md hover:bg-gray-400 ml-1"
+                >
+                  ✕
                 </button>
               </form>
             ) : (
