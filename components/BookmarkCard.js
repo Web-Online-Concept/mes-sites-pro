@@ -94,9 +94,11 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete }) {
       className="bookmark-card bg-white rounded-lg shadow-sm hover:shadow-md overflow-hidden transition-all cursor-move border border-gray-200"
     >
       {/* Image de prévisualisation */}
-      <div 
-        className="relative h-32 bg-gray-50 cursor-pointer group"
-        onClick={handleVisit}
+      <a 
+        href={bookmark.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block relative h-32 bg-gray-50 hover:bg-gray-100 transition-colors group"
       >
         {bookmark.screenshot && !imageError ? (
           <Image
@@ -128,7 +130,7 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
           </svg>
         </div>
-      </div>
+      </a>
 
       {/* Contenu de la carte */}
       <div className="p-3">
