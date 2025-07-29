@@ -35,10 +35,13 @@ export default function LoginForm() {
       const data = await response.json();
 
       if (response.ok) {
-        // Le cookie est déjà défini côté serveur, pas besoin de le refaire
+        // Stocker le token dans les cookies CÔTÉ CLIENT
+        Cookies.set('auth-token', data.token, { expires: 7, path: '/' });
         toast.success('Connexion réussie !');
-        // Utiliser router.push pour garder le cookie
-        router.push('/');
+        // Petite pause pour que le cookie soit bien enregistré
+        setTimeout(() => {
+          router.push('/');
+        }, 100);
       } else {
         toast.error(data.error || 'Erreur de connexion');
       }
