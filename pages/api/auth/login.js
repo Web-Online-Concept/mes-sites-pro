@@ -39,10 +39,10 @@ export default async function handler(req, res) {
     // Générer le token JWT
     const token = generateToken(user.id);
 
-    // Définir le cookie
+    // Définir le cookie (sans HttpOnly pour qu'il soit accessible en JS)
     res.setHeader(
       'Set-Cookie',
-      `auth-token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}` // 7 jours
+      `auth-token=${token}; Path=/; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}` // 7 jours
     );
 
     // Retourner les informations de l'utilisateur (sans le mot de passe)

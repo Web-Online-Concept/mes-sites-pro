@@ -35,11 +35,10 @@ export default function LoginForm() {
       const data = await response.json();
 
       if (response.ok) {
-        // Stocker le token dans les cookies
-        Cookies.set('auth-token', data.token, { expires: 7 });
+        // Le cookie est déjà défini côté serveur, pas besoin de le refaire
         toast.success('Connexion réussie !');
-        // Forcer le rechargement complet pour voir l'app
-        window.location.href = '/';
+        // Utiliser router.push pour garder le cookie
+        router.push('/');
       } else {
         toast.error(data.error || 'Erreur de connexion');
       }
