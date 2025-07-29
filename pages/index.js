@@ -55,6 +55,7 @@ export default function HomePage() {
         const response = await fetch('/api/tabs');
         if (response.ok) {
           const data = await response.json();
+          console.log('Tabs loaded:', data); // Debug
           setTabs(data);
         }
       } catch (error) {
