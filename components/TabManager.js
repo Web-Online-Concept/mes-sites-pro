@@ -139,10 +139,10 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4">
-      <div className="flex items-center gap-2 overflow-x-auto">
+    <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl shadow-md p-4 border border-gray-200">
+      <div className="flex items-center gap-3 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
         {tabs.map((tab) => (
-          <div key={tab.id}>
+          <div key={tab.id} className="relative">
             {editingTab === tab.id ? (
               <form onSubmit={(e) => { e.preventDefault(); handleUpdateTab(tab.id); }} className="flex items-center">
                 <input
@@ -178,13 +178,23 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
             ) : (
               <button
                 onClick={() => onTabChange(tab.id)}
-                className={`group flex items-center gap-2 px-4 py-2 rounded-md transition-colors whitespace-nowrap ${
+                className={`group flex items-center gap-2 px-5 py-2.5 rounded-lg transition-all duration-200 whitespace-nowrap font-medium ${
                   activeTab === tab.id
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg transform scale-105'
+                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 hover:border-gray-400 hover:shadow-sm'
                 }`}
               >
                 {tab.name}
+                {/* Badge avec le nombre de favoris */}
+                {!isEditMode && tab._count?.bookmarks > 0 && (
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                    activeTab === tab.id
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-600'
+                  } font-semibold`}>
+                    {tab._count.bookmarks}
+                  </span>
+                )}
                 {/* Actions intégrées dans l'onglet actif seulement */}
                 {isEditMode && activeTab === tab.id && (
                   <div className="flex items-center gap-1 ml-2">
@@ -194,7 +204,7 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
                         setEditingTab(tab.id);
                         setEditingName(tab.name);
                       }}
-                      className="hover:bg-blue-700 rounded p-0.5 cursor-pointer"
+                      className="hover:bg-blue-800 hover:bg-opacity-30 rounded p-0.5 cursor-pointer transition-colors"
                       title="Modifier"
                     >
                       ✏️
@@ -205,7 +215,7 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
                           e.stopPropagation();
                           handleDeleteTab(tab.id);
                         }}
-                        className="hover:bg-blue-700 rounded p-0.5 cursor-pointer"
+                        className="hover:bg-blue-800 hover:bg-opacity-30 rounded p-0.5 cursor-pointer transition-colors"
                         title="Supprimer"
                       >
                         🗑️
@@ -250,7 +260,7 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
           ) : (
             <button
               onClick={() => setIsCreating(true)}
-              className="flex items-center gap-1 px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors whitespace-nowrap"
+              className="flex items-center gap-1 px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-md whitespace-nowrap font-medium"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
