@@ -439,7 +439,7 @@ export default function HomePage() {
                           <div key={subcategory.id} className="mb-8">
                             <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-blue-200">
                               <h3 className="text-xl font-bold text-blue-700">
-                                <span className="mr-2">🏷️</span>
+                                <span className="mr-2">🌐</span>
                                 {subcategory.name}
                               </h3>
                               {isEditMode && (
