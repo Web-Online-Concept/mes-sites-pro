@@ -50,7 +50,11 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
 
       if (response.ok) {
         const newTab = await response.json();
-        setTabs([...tabs, newTab]);
+        const updatedTabs = [...tabs, newTab];
+        setTabs(updatedTabs);
+        if (onTabsChange) {
+          onTabsChange(updatedTabs);
+        }
         setNewTabName('');
         setIsCreating(false);
         onTabChange(newTab.id);
@@ -80,7 +84,11 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
 
       if (response.ok) {
         const updatedTab = await response.json();
-        setTabs(tabs.map(tab => tab.id === tabId ? updatedTab : tab));
+        const updatedTabs = tabs.map(tab => tab.id === tabId ? updatedTab : tab);
+        setTabs(updatedTabs);
+        if (onTabsChange) {
+          onTabsChange(updatedTabs);
+        }
         setEditingTab(null);
         setEditingName('');
         toast.success('Onglet mis à jour');
@@ -111,6 +119,9 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
       if (response.ok) {
         const newTabs = tabs.filter(tab => tab.id !== tabId);
         setTabs(newTabs);
+        if (onTabsChange) {
+          onTabsChange(newTabs);
+        }
         
         // Si l'onglet actif est supprimé, sélectionner le premier
         if (activeTab === tabId && newTabs.length > 0) {
