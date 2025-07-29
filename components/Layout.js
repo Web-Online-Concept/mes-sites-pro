@@ -35,7 +35,7 @@ export default function Layout({ children, isEditMode, onToggleEditMode }) {
   const handleLogout = () => {
     Cookies.remove('auth-token');
     Cookies.remove('username');
-    router.push('/login');
+    router.push('/home');
   };
 
   return (
