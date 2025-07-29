@@ -193,7 +193,7 @@ export default function HomePage() {
   return (
     <Layout isEditMode={isEditMode} onToggleEditMode={() => setIsEditMode(!isEditMode)}>
       <Head>
-        <title>Mes Sites Pro - Gestionnaire de favoris</title>
+        <title>Mes Favoris</title>
         <meta name="description" content="Organisez vos sites favoris par onglets" />
       </Head>
 
