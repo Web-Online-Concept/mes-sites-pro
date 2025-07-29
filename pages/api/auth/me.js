@@ -1,62 +1,42 @@
-import { prisma } from '../../../lib/prisma';
-import { verifyPassword, generateToken } from '../../../lib/auth';
+import jwt from 'jsonwebtoken';
+import prisma from '../../../lib/prisma';
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Méthode non autorisée' });
-  }
-
-  const { email, password } = req.body;
-
-  // Validation
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email et mot de passe requis' });
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    // Trouver l'utilisateur par email
+    // Récupérer le token depuis les cookies
+    const token = req.cookies['auth-token'];
+
+    if (!token) {
+      return res.status(401).json({ error: 'Non authentifié' });
+    }
+
+    // Vérifier et décoder le token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Récupérer l'utilisateur depuis la base de données
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { id: decoded.userId },
       select: {
         id: true,
         username: true,
-        email: true,
-        password: true,
-      }
+        createdAt: true,
+      },
     });
 
     if (!user) {
-      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
     }
 
-    // Vérifier le mot de passe
-    const isPasswordValid = await verifyPassword(password, user.password);
-
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
-    }
-
-    // Générer le token JWT
-    const token = generateToken(user.id);
-
-    // Définir le cookie
-    res.setHeader(
-      'Set-Cookie',
-      `auth-token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}` // 7 jours
-    );
-
-    // Retourner les informations de l'utilisateur (sans le mot de passe)
-    res.status(200).json({
-      message: 'Connexion réussie',
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-      }
-    });
+    res.status(200).json(user);
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Erreur lors de la connexion' });
+    console.error('Auth check error:', error);
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ error: 'Token invalide' });
+    }
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 }

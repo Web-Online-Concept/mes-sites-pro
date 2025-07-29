@@ -8,12 +8,29 @@ export default function Layout({ children }) {
   const [username, setUsername] = useState('');
 
   useEffect(() => {
-    // Récupérer le username depuis le cookie
+    // Récupérer le username depuis le cookie d'abord
     const storedUsername = Cookies.get('username');
     if (storedUsername) {
       setUsername(storedUsername);
     }
+    
+    // Puis vérifier avec l'API pour être sûr
+    fetchUserInfo();
   }, []);
+
+  const fetchUserInfo = async () => {
+    try {
+      const response = await fetch('/api/auth/me');
+      if (response.ok) {
+        const data = await response.json();
+        setUsername(data.username);
+        // Mettre à jour le cookie au cas où
+        Cookies.set('username', data.username, { expires: 7, path: '/' });
+      }
+    } catch (error) {
+      console.error('Error fetching user info:', error);
+    }
+  };
 
   const handleLogout = () => {
     Cookies.remove('auth-token');
