@@ -406,14 +406,9 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
                       title="Déplacer vers..."
                     >
                       {tabs.map((tab) => (
-                        <optgroup key={tab.id} label={tab.name}>
-                          <option value={tab.id}>{tab.icon || '📁'} {tab.name}</option>
-                          {tab.children && tab.children.map((subcat) => (
-                            <option key={subcat.id} value={subcat.id}>
-                              &nbsp;&nbsp;└ {subcat.name}
-                            </option>
-                          ))}
-                        </optgroup>
+                        <option key={tab.id} value={tab.id}>
+                          {tab.icon || '📁'} {tab.name}
+                        </option>
                       ))}
                     </select>
                   </div>
