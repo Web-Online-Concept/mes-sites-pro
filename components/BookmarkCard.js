@@ -116,10 +116,10 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
       <div
         ref={setNodeRef}
         style={style}
-        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 p-3"
+        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 group"
       >
         {isEditing ? (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 p-3">
             <input
               type="text"
               value={editData.title}
@@ -160,7 +160,18 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
             </button>
           </div>
         ) : (
-          <div className="flex items-center gap-3">
+          <a
+            href={bookmark.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 p-3 no-underline text-inherit hover:bg-gray-50 transition-colors rounded-lg"
+            onClick={(e) => {
+              // Empêcher la navigation si on clique sur les boutons d'action
+              if (e.target.closest('button') || e.target.closest('select')) {
+                e.preventDefault();
+              }
+            }}
+          >
             {/* Favicon */}
             <img
               src={`https://www.google.com/s2/favicons?domain=${getDomain(bookmark.url)}&sz=32`}
@@ -187,6 +198,7 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
                   <select
                     value={selectedTabId}
                     onChange={(e) => handleTabChange(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
                     className="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     title="Déplacer vers..."
                   >
@@ -203,14 +215,22 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
                   </select>
                 )}
                 <button
-                  onClick={() => setIsEditing(true)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setIsEditing(true);
+                  }}
                   className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
                   title="Modifier"
                 >
                   ✏️
                 </button>
                 <button
-                  onClick={handleDelete}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    handleDelete();
+                  }}
                   className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
                   title="Supprimer"
                 >
@@ -219,19 +239,13 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
               </div>
             )}
 
-            {/* Lien */}
-            <a
-              href={bookmark.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-              title="Ouvrir le lien"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {/* Indicateur visuel d'ouverture */}
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
-            </a>
-          </div>
+            </div>
+          </a>
         )}
       </div>
     );
