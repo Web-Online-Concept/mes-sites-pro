@@ -61,6 +61,6 @@ export default async function handler(req, res) {
     res.status(200).json({ message: 'Ordre mis à jour avec succès' });
   } catch (error) {
     console.error('Reorder error:', error);
-    res.status(500).json({ error: 'Erreur lors de la réorganisation' });
+    res.status(500).json({ error: `Erreur lors de la réorganisation: ${error.message}` });
   }
 }

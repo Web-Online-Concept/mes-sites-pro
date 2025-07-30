@@ -181,11 +181,13 @@ export default function HomePage() {
 
   const handleDragStart = (event) => {
     setActiveId(event.active.id);
+    console.log('Drag started:', event.active.id);
   };
 
   const handleDragOver = (event) => {
     const { over } = event;
     setOverId(over ? over.id : null);
+    console.log('Drag over:', over ? over.id : null);
   };
 
   const handleDragEnd = async (event) => {
@@ -193,33 +195,46 @@ export default function HomePage() {
     setActiveId(null);
     setOverId(null);
 
-    if (!over || !active || active.id === over.id) return;
+    if (!over || !active || active.id === over.id) {
+      console.log('Drag cancelled: no over, same id, or invalid');
+      return;
+    }
 
     const activeBookmark = bookmarks.find(b => b.id === active.id);
-    if (!activeBookmark) return;
+    if (!activeBookmark) {
+      console.log('Active bookmark not found:', active.id);
+      return;
+    }
 
     try {
       let destinationTabId;
       let destinationIndex;
 
+      // Déterminer la catégorie cible et l'index
       if (over.id.toString().startsWith('category-')) {
         destinationTabId = over.id.replace('category-', '');
         const targetBookmarks = bookmarks
           .filter(b => b.tabId === destinationTabId)
           .sort((a, b) => a.order - b.order);
         destinationIndex = targetBookmarks.length;
+        console.log('Dropped on category:', destinationTabId, 'at index:', destinationIndex);
       } else {
         const overBookmark = bookmarks.find(b => b.id === over.id);
-        if (!overBookmark) return;
+        if (!overBookmark) {
+          console.log('Over bookmark not found:', over.id);
+          return;
+        }
         destinationTabId = overBookmark.tabId;
         const targetBookmarks = bookmarks
           .filter(b => b.tabId === destinationTabId)
           .sort((a, b) => a.order - b.order);
         destinationIndex = targetBookmarks.findIndex(b => b.id === overBookmark.id);
+        // Ajuster l'index si le bookmark actif est déplacé vers le bas dans la même catégorie
         if (activeBookmark.tabId === destinationTabId && 
             targetBookmarks.findIndex(b => b.id === activeBookmark.id) < destinationIndex) {
           destinationIndex--;
         }
+        console.log('Dropped on bookmark:', overBookmark.id, 'in tab:', destinationTabId, 'at index:', destinationIndex);
       }
 
       const sourceTabId = activeBookmark.tabId;
@@ -231,6 +246,7 @@ export default function HomePage() {
       let newBookmarks = [...bookmarks];
       
       if (sourceTabId === destinationTabId) {
+        // Réorganisation dans la même catégorie
         const reorderedBookmarks = arrayMove(
           sourceBookmarks,
           sourceIndex,
@@ -245,7 +261,9 @@ export default function HomePage() {
           }
           return b;
         });
+        console.log('Reordered in same category:', sourceTabId, reorderedBookmarks.map(b => b.id));
       } else {
+        // Déplacement vers une autre catégorie
         newBookmarks = newBookmarks.map(b => {
           if (b.id === activeBookmark.id) {
             return { ...b, tabId: destinationTabId, order: destinationIndex };
@@ -265,10 +283,12 @@ export default function HomePage() {
           ...updatedSourceBookmarks,
           ...updatedTargetBookmarks
         ];
+        console.log('Moved to new category:', destinationTabId, 'from:', sourceTabId);
       }
 
       setBookmarks(newBookmarks);
 
+      // Préparer les mises à jour pour l'API
       const sourceUpdates = newBookmarks
         .filter(b => b.tabId === sourceTabId)
         .map((b, index) => ({
@@ -284,6 +304,8 @@ export default function HomePage() {
           order: index,
           tabId: destinationTabId
         }));
+
+      console.log('Sending updates to API:', { updates: [...sourceUpdates, ...destinationUpdates] });
 
       const response = await fetch('/api/bookmarks/reorder', {
         method: 'POST',
@@ -576,6 +598,7 @@ export default function HomePage() {
                                   </div>
                                 ) : (
                                   <SortableContext
+                                    id={`sortable-${subcategory.id}`}
                                     items={categoryBookmarks.map(b => b.id)}
                                     strategy={verticalListSortingStrategy}
                                   >
@@ -590,7 +613,7 @@ export default function HomePage() {
                                           onUpdate={handleUpdateBookmark}
                                           onDelete={handleDeleteBookmark}
                                           isEditMode={isEditMode}
-                                          tabs={selectableTabs}
+                                          tabs={tabs} // Passer tous les tabs, y compris sous-catégories
                                           viewMode={viewMode}
                                         />
                                       ))}
@@ -623,6 +646,7 @@ export default function HomePage() {
                                 </div>
                               )}
                               <SortableContext
+                                id={`sortable-${activeTab}`}
                                 items={mainBookmarks.map(b => b.id)}
                                 strategy={verticalListSortingStrategy}
                               >
@@ -637,7 +661,7 @@ export default function HomePage() {
                                       onUpdate={handleUpdateBookmark}
                                       onDelete={handleDeleteBookmark}
                                       isEditMode={isEditMode}
-                                      tabs={selectableTabs}
+                                      tabs={tabs} // Passer tous les tabs, y compris sous-catégories
                                       viewMode={viewMode}
                                     />
                                   ))}
