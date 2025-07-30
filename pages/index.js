@@ -21,6 +21,7 @@ import TabManager from '../components/TabManager.js';
 import BookmarkCard from '../components/BookmarkCard.js';
 import SubcategoryManager from '../components/SubcategoryManager.js';
 import ExportImport from '../components/ExportImport.js';
+import EmojiPicker from '../components/EmojiPicker.js';
 import toast from 'react-hot-toast';
 
 export default function HomePage() {
@@ -34,6 +35,7 @@ export default function HomePage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSavingBookmark, setIsSavingBookmark] = useState(false);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' ou 'list'
+  const [unclassifiedIcon, setUnclassifiedIcon] = useState('📌');
   const [newBookmark, setNewBookmark] = useState({
     url: '',
     title: '',
@@ -71,6 +73,20 @@ export default function HomePage() {
       fetchBookmarks();
     }
   }, [isAuthenticated]);
+
+  // Charger l'icône "Non classés" depuis localStorage
+  useEffect(() => {
+    const savedIcon = localStorage.getItem('unclassifiedIcon');
+    if (savedIcon) {
+      setUnclassifiedIcon(savedIcon);
+    }
+  }, []);
+
+  // Sauvegarder l'icône "Non classés" dans localStorage
+  const handleUnclassifiedIconChange = (newIcon) => {
+    setUnclassifiedIcon(newIcon);
+    localStorage.setItem('unclassifiedIcon', newIcon);
+  };
 
   const fetchBookmarks = async () => {
     setLoading(true);
@@ -419,8 +435,17 @@ export default function HomePage() {
                       {mainBookmarks.length > 0 && (
                         <div className="mb-8 bg-gray-50 rounded-xl p-4 border border-gray-200">
                           {subcategories.length > 0 && (
-                            <div className="mb-4 pb-2 border-b border-gray-300">
-                              <h3 className="text-lg font-semibold text-gray-600">📌 Non classés</h3>
+                            <div className="mb-4 pb-2 border-b border-gray-300 flex items-center justify-between">
+                              <h3 className="text-lg font-semibold text-gray-600 flex items-center gap-2">
+                                <span>{unclassifiedIcon}</span>
+                                Non classés
+                              </h3>
+                              {isEditMode && (
+                                <EmojiPicker 
+                                  currentEmoji={unclassifiedIcon} 
+                                  onSelect={handleUnclassifiedIconChange}
+                                />
+                              )}
                             </div>
                           )}
                           <DndContext
@@ -465,7 +490,7 @@ export default function HomePage() {
                           <div key={subcategory.id} className="mb-8 bg-blue-50 rounded-xl p-4 border border-blue-200">
                             <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-blue-300">
                               <h3 className="text-xl font-bold text-blue-700">
-                                <span className="mr-2">🌐</span>
+                                <span className="mr-2">{subcategory.icon || '🌐'}</span>
                                 {subcategory.name}
                               </h3>
                               {isEditMode && (

@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import EmojiPicker from './EmojiPicker';
 
 export default function SubcategoryManager({ parentTabId, subcategories, onSubcategoriesChange, isEditMode }) {
   const [isAdding, setIsAdding] = useState(false);
   const [newSubcategoryName, setNewSubcategoryName] = useState('');
+  const [newSubcategoryIcon, setNewSubcategoryIcon] = useState('🌐');
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -19,7 +21,8 @@ export default function SubcategoryManager({ parentTabId, subcategories, onSubca
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: newSubcategoryName,
-          parentId: parentTabId
+          parentId: parentTabId,
+          icon: newSubcategoryIcon
         }),
       });
 
@@ -27,6 +30,7 @@ export default function SubcategoryManager({ parentTabId, subcategories, onSubca
         const newSubcategory = await response.json();
         onSubcategoriesChange([...subcategories, newSubcategory]);
         setNewSubcategoryName('');
+        setNewSubcategoryIcon('🌐');
         setIsAdding(false);
         toast.success('Sous-catégorie créée');
       } else {
@@ -71,6 +75,10 @@ export default function SubcategoryManager({ parentTabId, subcategories, onSubca
         <div className="flex items-center gap-2 mb-2">
           {isAdding ? (
             <form onSubmit={handleAdd} className="flex gap-2">
+              <EmojiPicker 
+                currentEmoji={newSubcategoryIcon} 
+                onSelect={setNewSubcategoryIcon}
+              />
               <input
                 type="text"
                 value={newSubcategoryName}
@@ -90,6 +98,7 @@ export default function SubcategoryManager({ parentTabId, subcategories, onSubca
                 onClick={() => {
                   setIsAdding(false);
                   setNewSubcategoryName('');
+                  setNewSubcategoryIcon('🌐');
                 }}
                 className="px-3 py-1 bg-gray-400 text-white rounded-md hover:bg-gray-500 text-sm"
               >
