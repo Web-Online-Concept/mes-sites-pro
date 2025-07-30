@@ -302,13 +302,13 @@ export default function HomePage() {
           });
 
           if (response.ok) {
-            // Ne recharger que si on change de catégorie
+            // Toujours recharger pour garantir la synchronisation
+            await fetchBookmarks();
             if (sourceTabId !== destinationTabId) {
-              fetchBookmarks();
               toast.success('Favori déplacé avec succès');
             }
           } else {
-            fetchBookmarks();
+            await fetchBookmarks();
             toast.error('Erreur lors du déplacement');
           }
         } catch (error) {
