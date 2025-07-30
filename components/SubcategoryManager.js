@@ -6,6 +6,9 @@ export default function SubcategoryManager({ parentTabId, subcategories, onSubca
   const [isAdding, setIsAdding] = useState(false);
   const [newSubcategoryName, setNewSubcategoryName] = useState('');
   const [newSubcategoryIcon, setNewSubcategoryIcon] = useState('🌐');
+  const [editingSubcategoryId, setEditingSubcategoryId] = useState(null);
+  const [editingName, setEditingName] = useState('');
+  const [editingIcon, setEditingIcon] = useState('');
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -65,6 +68,52 @@ export default function SubcategoryManager({ parentTabId, subcategories, onSubca
     }
   };
 
+  const startEdit = (subcategory) => {
+    setEditingSubcategoryId(subcategory.id);
+    setEditingName(subcategory.name);
+    setEditingIcon(subcategory.icon || '🌐');
+  };
+
+  const cancelEdit = () => {
+    setEditingSubcategoryId(null);
+    setEditingName('');
+    setEditingIcon('');
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    
+    if (!editingName.trim()) {
+      toast.error('Le nom est requis');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/tabs/${editingSubcategoryId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editingName,
+          icon: editingIcon
+        }),
+      });
+
+      if (response.ok) {
+        const updatedSubcategory = await response.json();
+        onSubcategoriesChange(subcategories.map(s => 
+          s.id === editingSubcategoryId ? updatedSubcategory : s
+        ));
+        cancelEdit();
+        toast.success('Sous-catégorie modifiée');
+      } else {
+        toast.error('Erreur lors de la modification');
+      }
+    } catch (error) {
+      console.error('Update subcategory error:', error);
+      toast.error('Erreur lors de la modification');
+    }
+  };
+
   if (!isEditMode && subcategories.length === 0) {
     return null;
   }
@@ -119,23 +168,65 @@ export default function SubcategoryManager({ parentTabId, subcategories, onSubca
         </div>
       )}
 
-      {/* Liste des sous-catégories pour sélection */}
+      {/* Liste des sous-catégories */}
       {subcategories.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {subcategories.map(sub => (
-            <div
-              key={sub.id}
-              className="flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full text-sm"
-            >
-              <span>{sub.name}</span>
-              {isEditMode && (
-                <button
-                  onClick={() => handleDelete(sub.id)}
-                  className="ml-1 text-red-500 hover:text-red-700"
-                  title="Supprimer"
-                >
-                  ✕
-                </button>
+            <div key={sub.id}>
+              {editingSubcategoryId === sub.id ? (
+                <form onSubmit={handleUpdate} className="flex items-center gap-2">
+                  <EmojiPicker 
+                    currentEmoji={editingIcon} 
+                    onSelect={setEditingIcon}
+                  />
+                  <input
+                    type="text"
+                    value={editingName}
+                    onChange={(e) => setEditingName(e.target.value)}
+                    className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    autoFocus
+                  />
+                  <button
+                    type="submit"
+                    className="px-2 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm"
+                    title="Valider"
+                  >
+                    ✓
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    className="px-2 py-1 bg-gray-400 text-white rounded-md hover:bg-gray-500 text-sm"
+                    title="Annuler"
+                  >
+                    ✕
+                  </button>
+                </form>
+              ) : (
+                <div className="flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full text-sm group">
+                  <span className="flex items-center gap-1">
+                    <span>{sub.icon || '🌐'}</span>
+                    <span>{sub.name}</span>
+                  </span>
+                  {isEditMode && (
+                    <div className="flex items-center gap-1 ml-2">
+                      <button
+                        onClick={() => startEdit(sub)}
+                        className="text-blue-500 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Modifier"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => handleDelete(sub.id)}
+                        className="text-red-500 hover:text-red-700"
+                        title="Supprimer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           ))}
