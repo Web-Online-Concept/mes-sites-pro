@@ -109,10 +109,17 @@ export default function HomePage() {
   const fetchBookmarks = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/bookmarks`); // On récupère TOUS les favoris
+      const response = await fetch(`/api/bookmarks`);
       if (response.ok) {
         const data = await response.json();
-        setBookmarks(data);
+        // Normaliser les ordres par catégorie
+        const normalizedBookmarks = data.map(bookmark => {
+          const categoryBookmarks = data.filter(b => b.tabId === bookmark.tabId);
+          categoryBookmarks.sort((a, b) => a.order - b.order);
+          const normalizedOrder = categoryBookmarks.findIndex(b => b.id === bookmark.id);
+          return { ...bookmark, order: normalizedOrder };
+        });
+        setBookmarks(normalizedBookmarks);
       }
     } catch (error) {
       console.error('Error fetching bookmarks:', error);
@@ -195,195 +202,110 @@ export default function HomePage() {
     setActiveId(null);
     setOverId(null);
 
-    if (!over) return;
+    if (!over || active.id === over.id) return;
 
     const activeBookmark = bookmarks.find(b => b.id === active.id);
     if (!activeBookmark) return;
 
-    // Sauvegarder la position de scroll actuelle
-    const scrollPosition = window.scrollY;
-
-    // Cas 1: Drop sur une zone de catégorie vide
-    if (over.id && typeof over.id === 'string' && over.id.startsWith('category-')) {
+    // Si on drop sur une catégorie
+    if (over.id.toString().startsWith('category-')) {
       const newTabId = over.id.replace('category-', '');
       
       if (newTabId !== activeBookmark.tabId) {
+        // Mise à jour locale immédiate
+        const newBookmarks = bookmarks.map(b => 
+          b.id === activeBookmark.id ? { ...b, tabId: newTabId } : b
+        );
+        setBookmarks(newBookmarks);
+        
+        // API simple
         try {
-          // Obtenir les bookmarks triés par catégorie
-          const destinationBookmarks = bookmarks
-            .filter(b => b.tabId === newTabId)
-            .sort((a, b) => a.order - b.order);
-          
-          const sourceBookmarks = bookmarks
-            .filter(b => b.tabId === activeBookmark.tabId)
-            .sort((a, b) => a.order - b.order);
-          
-          const sourceIndex = sourceBookmarks.findIndex(b => b.id === activeBookmark.id);
-          const destinationIndex = destinationBookmarks.length;
-          
-          // Mise à jour optimiste locale
-          const updatedBookmark = { 
-            ...activeBookmark, 
-            tabId: newTabId,
-            order: destinationIndex 
-          };
-          
-          // Recalculer tous les bookmarks avec les nouveaux ordres
-          const optimisticBookmarks = bookmarks
-            .filter(b => b.id !== activeBookmark.id)
-            .concat(updatedBookmark)
-            .map(b => {
-              // Réajuster l'ordre dans la catégorie source
-              if (b.tabId === activeBookmark.tabId && b.order > activeBookmark.order) {
-                return { ...b, order: b.order - 1 };
-              }
-              return b;
-            });
-          
-          setBookmarks(optimisticBookmarks);
-          
-          // Appeler l'API
-          const response = await fetch('/api/bookmarks/reorder', {
+          await fetch('/api/bookmarks/update-order', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               bookmarkId: activeBookmark.id,
-              sourceIndex: sourceIndex,
-              destinationIndex: destinationIndex,
-              sourceTabId: activeBookmark.tabId,
-              destinationTabId: newTabId,
+              newOrder: 999, // Dernier
+              tabId: newTabId
             }),
           });
-
-          if (response.ok) {
-            toast.success('Favori déplacé avec succès');
-            // Optionnel : recharger en arrière-plan pour synchroniser
-            setTimeout(() => {
-              fetchBookmarks().then(() => {
-                window.scrollTo(0, scrollPosition);
-              });
-            }, 1000);
-          } else {
-            // En cas d'erreur, recharger et restaurer la position
-            await fetchBookmarks();
-            window.scrollTo(0, scrollPosition);
-            toast.error('Erreur lors du déplacement');
-          }
+          toast.success('Favori déplacé');
         } catch (error) {
-          console.error('Move error:', error);
-          await fetchBookmarks();
-          window.scrollTo(0, scrollPosition);
-          toast.error('Erreur lors du déplacement');
+          console.error(error);
+          fetchBookmarks();
         }
       }
     } 
-    // Cas 2: Drop sur un autre bookmark
-    else if (over.id && over.id !== active.id) {
+    // Si on drop sur un autre bookmark
+    else {
       const overBookmark = bookmarks.find(b => b.id === over.id);
+      if (!overBookmark) return;
       
-      if (overBookmark) {
-        const sourceTabId = activeBookmark.tabId;
-        const destinationTabId = overBookmark.tabId;
+      // Même catégorie = réorganiser
+      if (activeBookmark.tabId === overBookmark.tabId) {
+        const categoryBookmarks = bookmarks
+          .filter(b => b.tabId === activeBookmark.tabId)
+          .sort((a, b) => a.order - b.order);
+        
+        const oldIndex = categoryBookmarks.findIndex(b => b.id === active.id);
+        const newIndex = categoryBookmarks.findIndex(b => b.id === over.id);
+        
+        if (oldIndex !== -1 && newIndex !== -1) {
+          const reordered = arrayMove(categoryBookmarks, oldIndex, newIndex);
+          
+          // Mise à jour locale avec nouveaux ordres
+          const newBookmarks = bookmarks.map(b => {
+            if (b.tabId === activeBookmark.tabId) {
+              const idx = reordered.findIndex(rb => rb.id === b.id);
+              return idx !== -1 ? { ...b, order: idx * 10 } : b;
+            }
+            return b;
+          });
+          
+          setBookmarks(newBookmarks);
+          
+          // Sauvegarder chaque ordre
+          try {
+            await Promise.all(
+              reordered.map((b, idx) => 
+                fetch('/api/bookmarks/update-order', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    bookmarkId: b.id,
+                    newOrder: idx * 10,
+                    tabId: b.tabId
+                  }),
+                })
+              )
+            );
+          } catch (error) {
+            console.error(error);
+            fetchBookmarks();
+          }
+        }
+      }
+      // Catégorie différente = déplacer
+      else {
+        const newBookmarks = bookmarks.map(b => 
+          b.id === activeBookmark.id ? { ...b, tabId: overBookmark.tabId } : b
+        );
+        setBookmarks(newBookmarks);
         
         try {
-          // Calculer les indices basés sur l'ordre trié
-          const sourceBookmarks = bookmarks
-            .filter(b => b.tabId === sourceTabId)
-            .sort((a, b) => a.order - b.order);
-          
-          const destinationBookmarks = bookmarks
-            .filter(b => b.tabId === destinationTabId)
-            .sort((a, b) => a.order - b.order);
-          
-          const sourceIndex = sourceBookmarks.findIndex(b => b.id === activeBookmark.id);
-          let destinationIndex = destinationBookmarks.findIndex(b => b.id === overBookmark.id);
-          
-          // Ajuster l'index de destination
-          if (sourceTabId === destinationTabId && sourceIndex < destinationIndex) {
-            // Même catégorie, déplacement vers le bas
-            destinationIndex = Math.max(0, destinationIndex);
-          } else if (sourceTabId !== destinationTabId) {
-            // Changement de catégorie, insérer après
-            destinationIndex = destinationIndex + 1;
-          }
-          
-          // Mise à jour optimiste complète
-          if (sourceTabId === destinationTabId) {
-            // Réorganisation dans la même catégorie
-            const reorderedBookmarks = arrayMove(sourceBookmarks, sourceIndex, destinationIndex);
-            
-            // Mettre à jour l'état local immédiatement
-            setBookmarks(prevBookmarks => {
-              return prevBookmarks.map(bookmark => {
-                if (bookmark.tabId === sourceTabId) {
-                  const index = reorderedBookmarks.findIndex(rb => rb.id === bookmark.id);
-                  if (index !== -1) {
-                    return { ...bookmark, order: index };
-                  }
-                }
-                return bookmark;
-              });
-            });
-          } else {
-            // Changement de catégorie
-            const updatedBookmark = { 
-              ...activeBookmark, 
-              tabId: destinationTabId,
-              order: destinationIndex 
-            };
-            
-            // Retirer de la source et ajouter à la destination
-            const sourceWithoutActive = sourceBookmarks.filter(b => b.id !== activeBookmark.id);
-            const destinationWithActive = [...destinationBookmarks];
-            destinationWithActive.splice(destinationIndex, 0, updatedBookmark);
-            
-            // Recalculer tous les ordres
-            const optimisticBookmarks = bookmarks.map(b => {
-              // Bookmarks de la catégorie source (réindexer)
-              if (b.tabId === sourceTabId && b.id !== activeBookmark.id) {
-                const newIndex = sourceWithoutActive.findIndex(sb => sb.id === b.id);
-                return { ...b, order: newIndex };
-              }
-              // Bookmarks de la catégorie destination (réindexer)
-              if (b.tabId === destinationTabId || b.id === activeBookmark.id) {
-                const destBookmark = destinationWithActive.find(db => db.id === b.id);
-                if (destBookmark) {
-                  const newIndex = destinationWithActive.findIndex(db => db.id === b.id);
-                  return { ...destBookmark, order: newIndex };
-                }
-              }
-              return b;
-            });
-            
-            setBookmarks(optimisticBookmarks);
-          }
-          
-          // Appeler l'API
-          const response = await fetch('/api/bookmarks/reorder', {
+          await fetch('/api/bookmarks/update-order', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               bookmarkId: activeBookmark.id,
-              sourceIndex: sourceIndex,
-              destinationIndex: destinationIndex,
-              sourceTabId: sourceTabId,
-              destinationTabId: destinationTabId,
+              newOrder: overBookmark.order + 5,
+              tabId: overBookmark.tabId
             }),
           });
-
-          if (!response.ok) {
-            // En cas d'erreur seulement, recharger
-            await fetchBookmarks();
-            window.scrollTo(0, scrollPosition);
-            toast.error('Erreur lors du déplacement');
-          } else if (sourceTabId !== destinationTabId) {
-            toast.success('Favori déplacé avec succès');
-          }
+          toast.success('Favori déplacé');
         } catch (error) {
-          console.error('Reorder error:', error);
-          await fetchBookmarks();
-          window.scrollTo(0, scrollPosition);
-          toast.error('Erreur lors du déplacement');
+          console.error(error);
+          fetchBookmarks();
         }
       }
     }
