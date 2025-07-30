@@ -240,28 +240,47 @@ export default function HomePage() {
     } 
     // Si on drop sur un autre bookmark dans la même catégorie (réorganisation)
     else if (over.id !== active.id && !over.id.toString().startsWith('category-')) {
-      const oldIndex = bookmarks.findIndex((b) => b.id === active.id);
-      const newIndex = bookmarks.findIndex((b) => b.id === over.id);
-
-      const newBookmarks = arrayMove(bookmarks, oldIndex, newIndex);
-      setBookmarks(newBookmarks);
-
-      try {
-        await fetch('/api/bookmarks/reorder', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            bookmarkId: active.id,
-            sourceIndex: oldIndex,
-            destinationIndex: newIndex,
-            sourceTabId: activeBookmark.tabId,
-            destinationTabId: activeBookmark.tabId,
-          }),
+      const overBookmark = bookmarks.find(b => b.id === over.id);
+      
+      // Vérifier qu'ils sont dans la même catégorie
+      if (overBookmark && activeBookmark.tabId === overBookmark.tabId) {
+        // Filtrer uniquement les bookmarks de cette catégorie
+        const categoryBookmarks = bookmarks.filter(b => b.tabId === activeBookmark.tabId);
+        const oldIndex = categoryBookmarks.findIndex(b => b.id === active.id);
+        const newIndex = categoryBookmarks.findIndex(b => b.id === over.id);
+        
+        // Réorganiser uniquement dans cette catégorie
+        const reorderedCategoryBookmarks = arrayMove(categoryBookmarks, oldIndex, newIndex);
+        
+        // Reconstruire le tableau complet en préservant l'ordre des autres catégories
+        const newBookmarks = bookmarks.map(bookmark => {
+          if (bookmark.tabId === activeBookmark.tabId) {
+            // Trouver la nouvelle position de ce bookmark dans la catégorie réorganisée
+            const indexInCategory = reorderedCategoryBookmarks.findIndex(b => b.id === bookmark.id);
+            return reorderedCategoryBookmarks[indexInCategory];
+          }
+          return bookmark;
         });
-      } catch (error) {
-        console.error('Reorder error:', error);
-        toast.error('Erreur lors de la réorganisation');
-        fetchBookmarks(); // Recharger en cas d'erreur
+        
+        setBookmarks(newBookmarks);
+
+        try {
+          await fetch('/api/bookmarks/reorder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              bookmarkId: active.id,
+              sourceIndex: oldIndex,
+              destinationIndex: newIndex,
+              sourceTabId: activeBookmark.tabId,
+              destinationTabId: activeBookmark.tabId,
+            }),
+          });
+        } catch (error) {
+          console.error('Reorder error:', error);
+          toast.error('Erreur lors de la réorganisation');
+          fetchBookmarks(); // Recharger en cas d'erreur
+        }
       }
     }
   };
@@ -518,58 +537,7 @@ export default function HomePage() {
 
                     return (
                       <>
-                        {/* Favoris principaux (sans sous-catégorie) */}
-                        {(mainBookmarks.length > 0 || subcategories.length > 0) && (
-                          <DroppableCategory 
-                            id={`category-${activeTab}`} 
-                            isOver={overId === `category-${activeTab}`}
-                          >
-                            <div className="mb-8 bg-gray-50 rounded-xl p-4 border border-gray-200">
-                              {subcategories.length > 0 && (
-                                <div className="mb-4 pb-2 border-b border-gray-300 flex items-center justify-between">
-                                  <h3 className="text-lg font-semibold text-gray-600 flex items-center gap-2">
-                                    <span>{unclassifiedIcon}</span>
-                                    Non classés
-                                  </h3>
-                                  {isEditMode && (
-                                    <EmojiPicker 
-                                      currentEmoji={unclassifiedIcon} 
-                                      onSelect={handleUnclassifiedIconChange}
-                                    />
-                                  )}
-                                </div>
-                              )}
-                              <SortableContext
-                                items={mainBookmarks.map(b => b.id)}
-                                strategy={verticalListSortingStrategy}
-                              >
-                                <div className={viewMode === 'grid' 
-                                  ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3"
-                                  : "flex flex-col gap-2"
-                                }>
-                                  {mainBookmarks.map((bookmark) => (
-                                    <BookmarkCard
-                                      key={bookmark.id}
-                                      bookmark={bookmark}
-                                      onUpdate={handleUpdateBookmark}
-                                      onDelete={handleDeleteBookmark}
-                                      isEditMode={isEditMode}
-                                      tabs={selectableTabs}
-                                      viewMode={viewMode}
-                                    />
-                                  ))}
-                                </div>
-                              </SortableContext>
-                              {mainBookmarks.length === 0 && isEditMode && (
-                                <div className="text-center py-8 text-gray-400 text-sm">
-                                  Glissez des favoris ici
-                                </div>
-                              )}
-                            </div>
-                          </DroppableCategory>
-                        )}
-
-                        {/* Favoris par sous-catégorie */}
+                        {/* Favoris par sous-catégorie EN PREMIER */}
                         {subcategories.map(subcategory => {
                           const categoryBookmarks = bookmarksByCategory[subcategory.id] || [];
                           
@@ -629,6 +597,57 @@ export default function HomePage() {
                             </DroppableCategory>
                           );
                         })}
+
+                        {/* Favoris "Non classés" EN DERNIER */}
+                        {(mainBookmarks.length > 0 || (subcategories.length > 0 && isEditMode)) && (
+                          <DroppableCategory 
+                            id={`category-${activeTab}`} 
+                            isOver={overId === `category-${activeTab}`}
+                          >
+                            <div className="mb-8 bg-gray-50 rounded-xl p-4 border border-gray-200">
+                              {subcategories.length > 0 && (
+                                <div className="mb-4 pb-2 border-b border-gray-300 flex items-center justify-between">
+                                  <h3 className="text-lg font-semibold text-gray-600 flex items-center gap-2">
+                                    <span>{unclassifiedIcon}</span>
+                                    Non classés
+                                  </h3>
+                                  {isEditMode && (
+                                    <EmojiPicker 
+                                      currentEmoji={unclassifiedIcon} 
+                                      onSelect={handleUnclassifiedIconChange}
+                                    />
+                                  )}
+                                </div>
+                              )}
+                              <SortableContext
+                                items={mainBookmarks.map(b => b.id)}
+                                strategy={verticalListSortingStrategy}
+                              >
+                                <div className={viewMode === 'grid' 
+                                  ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3"
+                                  : "flex flex-col gap-2"
+                                }>
+                                  {mainBookmarks.map((bookmark) => (
+                                    <BookmarkCard
+                                      key={bookmark.id}
+                                      bookmark={bookmark}
+                                      onUpdate={handleUpdateBookmark}
+                                      onDelete={handleDeleteBookmark}
+                                      isEditMode={isEditMode}
+                                      tabs={selectableTabs}
+                                      viewMode={viewMode}
+                                    />
+                                  ))}
+                                </div>
+                              </SortableContext>
+                              {mainBookmarks.length === 0 && isEditMode && (
+                                <div className="text-center py-8 text-gray-400 text-sm">
+                                  Glissez des favoris ici
+                                </div>
+                              )}
+                            </div>
+                          </DroppableCategory>
+                        )}
                       </>
                     );
                   })()}
