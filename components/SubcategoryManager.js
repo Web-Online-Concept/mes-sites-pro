@@ -174,36 +174,38 @@ export default function SubcategoryManager({ parentTabId, subcategories, onSubca
           {subcategories.map(sub => (
             <div key={sub.id}>
               {editingSubcategoryId === sub.id ? (
-                <form onSubmit={handleUpdate} className="flex items-center gap-2">
-                  <EmojiPicker 
-                    currentEmoji={editingIcon} 
-                    onSelect={setEditingIcon}
-                  />
-                  <input
-                    type="text"
-                    value={editingName}
-                    onChange={(e) => setEditingName(e.target.value)}
-                    className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    autoFocus
-                  />
-                  <button
-                    type="submit"
-                    className="px-2 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm"
-                    title="Valider"
-                  >
-                    ✓
-                  </button>
-                  <button
-                    type="button"
-                    onClick={cancelEdit}
-                    className="px-2 py-1 bg-gray-400 text-white rounded-md hover:bg-gray-500 text-sm"
-                    title="Annuler"
-                  >
-                    ✕
-                  </button>
-                </form>
+                <div className="inline-flex bg-blue-50 p-2 rounded-lg border-2 border-blue-300">
+                  <form onSubmit={handleUpdate} className="flex items-center gap-2">
+                    <EmojiPicker 
+                      currentEmoji={editingIcon} 
+                      onSelect={setEditingIcon}
+                    />
+                    <input
+                      type="text"
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      autoFocus
+                    />
+                    <button
+                      type="submit"
+                      className="px-2 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm"
+                      title="Valider"
+                    >
+                      ✓
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelEdit}
+                      className="px-2 py-1 bg-gray-400 text-white rounded-md hover:bg-gray-500 text-sm"
+                      title="Annuler"
+                    >
+                      ✕
+                    </button>
+                  </form>
+                </div>
               ) : (
-                <div className="flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full text-sm group">
+                <div className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full text-sm">
                   <span className="flex items-center gap-1">
                     <span>{sub.icon || '🌐'}</span>
                     <span>{sub.name}</span>
@@ -212,7 +214,7 @@ export default function SubcategoryManager({ parentTabId, subcategories, onSubca
                     <div className="flex items-center gap-1 ml-2">
                       <button
                         onClick={() => startEdit(sub)}
-                        className="text-blue-500 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="text-blue-500 hover:text-blue-700 text-sm"
                         title="Modifier"
                       >
                         ✏️
