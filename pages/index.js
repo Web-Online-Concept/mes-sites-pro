@@ -302,9 +302,9 @@ export default function HomePage() {
           });
 
           if (response.ok) {
-            // Recharger pour avoir l'ordre correct du serveur
-            fetchBookmarks();
+            // Ne recharger que si on change de catégorie
             if (sourceTabId !== destinationTabId) {
+              fetchBookmarks();
               toast.success('Favori déplacé avec succès');
             }
           } else {
