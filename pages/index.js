@@ -77,6 +77,9 @@ export default function HomePage() {
         if (response.ok) {
           const data = await response.json();
           setTabs(data);
+        } else {
+          console.error('Failed to fetch tabs:', response.status);
+          toast.error('Erreur lors du chargement des onglets');
         }
       } catch (error) {
         console.error('Error fetching tabs:', error);
@@ -110,6 +113,7 @@ export default function HomePage() {
         const data = await response.json();
         setBookmarks(data);
       } else {
+        console.error('Failed to fetch bookmarks:', response.status);
         toast.error('Erreur lors du chargement des favoris');
       }
     } catch (error) {
@@ -210,7 +214,6 @@ export default function HomePage() {
       let destinationTabId;
       let destinationIndex;
 
-      // Déterminer la catégorie cible et l'index
       if (over.id.toString().startsWith('category-')) {
         destinationTabId = over.id.replace('category-', '');
         const targetBookmarks = bookmarks
@@ -229,7 +232,6 @@ export default function HomePage() {
           .filter(b => b.tabId === destinationTabId)
           .sort((a, b) => a.order - b.order);
         destinationIndex = targetBookmarks.findIndex(b => b.id === overBookmark.id);
-        // Ajuster l'index si le bookmark actif est déplacé vers le bas dans la même catégorie
         if (activeBookmark.tabId === destinationTabId && 
             targetBookmarks.findIndex(b => b.id === activeBookmark.id) < destinationIndex) {
           destinationIndex--;
@@ -246,7 +248,6 @@ export default function HomePage() {
       let newBookmarks = [...bookmarks];
       
       if (sourceTabId === destinationTabId) {
-        // Réorganisation dans la même catégorie
         const reorderedBookmarks = arrayMove(
           sourceBookmarks,
           sourceIndex,
@@ -263,7 +264,6 @@ export default function HomePage() {
         });
         console.log('Reordered in same category:', sourceTabId, reorderedBookmarks.map(b => b.id));
       } else {
-        // Déplacement vers une autre catégorie
         newBookmarks = newBookmarks.map(b => {
           if (b.id === activeBookmark.id) {
             return { ...b, tabId: destinationTabId, order: destinationIndex };
@@ -288,7 +288,6 @@ export default function HomePage() {
 
       setBookmarks(newBookmarks);
 
-      // Préparer les mises à jour pour l'API
       const sourceUpdates = newBookmarks
         .filter(b => b.tabId === sourceTabId)
         .map((b, index) => ({
@@ -305,20 +304,22 @@ export default function HomePage() {
           tabId: destinationTabId
         }));
 
-      console.log('Sending updates to API:', { updates: [...sourceUpdates, ...destinationUpdates] });
+      const updates = [...sourceUpdates, ...destinationUpdates].filter(update => update.id);
+      console.log('Sending updates to API:', JSON.stringify({ updates }, null, 2));
 
       const response = await fetch('/api/bookmarks/reorder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          updates: [...sourceUpdates, ...destinationUpdates]
-        }),
+        body: JSON.stringify({ updates }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || `Erreur HTTP ${response.status}`);
       }
+
+      const responseData = await response.json();
+      console.log('API response:', responseData);
 
       toast.success('Favori déplacé');
     } catch (error) {
@@ -560,7 +561,7 @@ export default function HomePage() {
                       });
 
                     const mainBookmarks = bookmarksByCategory[activeTab] || [];
-                    const selectableTabs = tabs.filter(t => !t.parentId);
+                    const selectableTabs = tabs;
 
                     return (
                       <>
@@ -613,7 +614,7 @@ export default function HomePage() {
                                           onUpdate={handleUpdateBookmark}
                                           onDelete={handleDeleteBookmark}
                                           isEditMode={isEditMode}
-                                          tabs={tabs} // Passer tous les tabs, y compris sous-catégories
+                                          tabs={selectableTabs}
                                           viewMode={viewMode}
                                         />
                                       ))}
@@ -661,7 +662,7 @@ export default function HomePage() {
                                       onUpdate={handleUpdateBookmark}
                                       onDelete={handleDeleteBookmark}
                                       isEditMode={isEditMode}
-                                      tabs={tabs} // Passer tous les tabs, y compris sous-catégories
+                                      tabs={selectableTabs}
                                       viewMode={viewMode}
                                     />
                                   ))}

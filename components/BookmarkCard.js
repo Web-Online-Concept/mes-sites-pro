@@ -114,7 +114,7 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
       const domain = new URL(url).hostname;
       return domain.replace('www.', '');
     } catch {
-      return '';
+      return 'example.com';
     }
   };
 
@@ -389,9 +389,14 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
                       title="Déplacer vers..."
                     >
                       {tabs.map((tab) => (
-                        <option key={tab.id} value={tab.id}>
-                          {tab.icon || '📁'} {tab.name}
-                        </option>
+                        <optgroup key={tab.id} label={tab.name}>
+                          <option value={tab.id}>{tab.name}</option>
+                          {tab.children && tab.children.map((subcat) => (
+                            <option key={subcat.id} value={subcat.id}>
+                              &nbsp;&nbsp;└ {subcat.name}
+                            </option>
+                          ))}
+                        </optgroup>
                       ))}
                     </select>
                   </div>
