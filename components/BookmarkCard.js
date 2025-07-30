@@ -52,18 +52,27 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
     if (newTabId === bookmark.tabId) return;
 
     try {
-      const response = await fetch('/api/bookmarks/move', {
-        method: 'PUT',
+      // Récupérer les favoris de la catégorie cible pour déterminer la position
+      const responseBookmarks = await fetch(`/api/bookmarks?tabId=${newTabId}`);
+      const targetBookmarks = await responseBookmarks.json();
+      const newOrder = targetBookmarks.length;
+
+      const response = await fetch('/api/bookmarks/reorder', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({
-          bookmarkId: bookmark.id,
-          newTabId: newTabId
+          updates: [
+            {
+              id: bookmark.id,
+              tabId: newTabId,
+              order: newOrder,
+            },
+          ],
         }),
       });
 
       if (response.ok) {
-        const updatedBookmark = await response.json();
+        const updatedBookmark = { ...bookmark, tabId: newTabId, order: newOrder };
         onUpdate(updatedBookmark);
         setSelectedTabId(newTabId);
         toast.success('Favori déplacé avec succès');
@@ -100,7 +109,6 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
     }
   };
 
-  // Obtenir le domaine pour afficher un favicon
   const getDomain = (url) => {
     try {
       const domain = new URL(url).hostname;
@@ -110,7 +118,6 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
     }
   };
 
-  // Mode liste
   if (viewMode === 'list') {
     return (
       <div
@@ -166,13 +173,11 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
             rel="noopener noreferrer"
             className="flex items-center gap-3 p-3 no-underline text-inherit hover:bg-gray-50 transition-colors rounded-lg"
             onClick={(e) => {
-              // Empêcher la navigation si on clique sur les boutons d'action
               if (e.target.closest('button') || e.target.closest('select')) {
                 e.preventDefault();
               }
             }}
           >
-            {/* Favicon */}
             <img
               src={`https://www.google.com/s2/favicons?domain=${getDomain(bookmark.url)}&sz=32`}
               alt=""
@@ -181,8 +186,6 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
                 e.target.style.display = 'none';
               }}
             />
-
-            {/* Infos */}
             <div className="flex-1 min-w-0">
               <h3 className="font-medium text-gray-900 truncate">{bookmark.title}</h3>
               <p className="text-sm text-gray-500 truncate">{bookmark.url}</p>
@@ -190,8 +193,6 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
                 <p className="text-xs text-gray-600 truncate mt-1">{bookmark.description}</p>
               )}
             </div>
-
-            {/* Actions */}
             {isEditMode && (
               <div className="flex items-center gap-2 flex-shrink-0">
                 {tabs && tabs.length > 0 && (
@@ -245,8 +246,6 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
                 </button>
               </div>
             )}
-
-            {/* Indicateur visuel d'ouverture */}
             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
               <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -258,16 +257,13 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
     );
   }
 
-  // Mode grille (existant)
   return (
     <div
       ref={setNodeRef}
       style={style}
       className="bookmark-card fade-in bg-white rounded-lg shadow-sm hover:shadow-lg overflow-hidden transition-all border border-gray-200 w-full"
     >
-      {/* Zone draggable et image combinées */}
       <div className="relative">
-        {/* Poignée de drag discrète - visible seulement en mode édition */}
         {isEditMode && (
           <div 
             {...attributes} 
@@ -279,8 +275,6 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
             </svg>
           </div>
         )}
-
-        {/* Image de prévisualisation */}
         <a 
           href={bookmark.url}
           target="_blank"
@@ -293,7 +287,6 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
               alt="Aperçu"
               className="w-full h-full object-cover"
             />
-            {/* Overlay avec favicon et domaine */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center bg-white bg-opacity-90 rounded p-2">
                 <img
@@ -310,8 +303,6 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
               </div>
             </div>
           </div>
-          
-          {/* Overlay au survol */}
           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity flex items-center justify-center">
             <svg className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -319,8 +310,6 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
           </div>
         </a>
       </div>
-
-      {/* Contenu compact */}
       <div className="p-2">
         {isEditing ? (
           <div className="space-y-2">
@@ -361,14 +350,12 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
           </div>
         ) : (
           <div>
-            {/* Mode lecture - Titre centré uniquement */}
             {!isEditMode ? (
               <h3 className="font-medium text-gray-900 text-center text-sm" title={bookmark.title}>
                 {bookmark.title}
               </h3>
             ) : (
               <>
-                {/* Mode édition - Layout complet */}
                 <div className="flex items-start justify-between gap-1 mb-1">
                   <h3 className="font-medium text-gray-900 truncate text-xs flex-1" title={bookmark.title}>
                     {bookmark.title}
@@ -390,13 +377,9 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
                     </button>
                   </div>
                 </div>
-                
-                {/* Domaine au lieu de l'URL complète */}
                 <p className="text-xs text-gray-500 truncate" title={bookmark.url}>
                   {getDomain(bookmark.url)}
                 </p>
-                
-                {/* Sélecteur de catégorie */}
                 {tabs && tabs.length > 0 && (
                   <div className="mt-1">
                     <select
@@ -413,8 +396,6 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
                     </select>
                   </div>
                 )}
-                
-                {/* Description si présente */}
                 {bookmark.description && (
                   <p className="text-xs text-gray-600 mt-1 line-clamp-2">
                     {bookmark.description}

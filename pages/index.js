@@ -65,20 +65,17 @@ export default function HomePage() {
     if (token) {
       setIsAuthenticated(true);
     } else if (!loading) {
-      // Seulement rediriger si on n'est pas en train de charger
       router.push('/home');
     }
     setLoading(false);
-  }, []); // Pas de dépendances pour éviter les boucles
-  
-  // Charger les tabs et bookmarks au démarrage
+  }, []);
+
   useEffect(() => {
     const fetchTabs = async () => {
       try {
         const response = await fetch('/api/tabs');
         if (response.ok) {
           const data = await response.json();
-          console.log('Tabs loaded:', data); // Debug
           setTabs(data);
         }
       } catch (error) {
@@ -92,7 +89,6 @@ export default function HomePage() {
     }
   }, [isAuthenticated]);
 
-  // Charger l'icône "Non classés" depuis localStorage
   useEffect(() => {
     const savedIcon = localStorage.getItem('unclassifiedIcon');
     if (savedIcon) {
@@ -100,7 +96,6 @@ export default function HomePage() {
     }
   }, []);
 
-  // Sauvegarder l'icône "Non classés" dans localStorage
   const handleUnclassifiedIconChange = (newIcon) => {
     setUnclassifiedIcon(newIcon);
     localStorage.setItem('unclassifiedIcon', newIcon);
@@ -198,147 +193,138 @@ export default function HomePage() {
     if (!over || !active || active.id === over.id) return;
 
     const activeBookmark = bookmarks.find(b => b.id === active.id);
-    if (!activeBookmark || !over.id) return;
+    if (!activeBookmark) return;
 
-    // Si on drop sur une zone de catégorie
-    if (over.id.toString().startsWith('category-')) {
-      const newTabId = over.id.replace('category-', '');
-      
-      if (newTabId === activeBookmark.tabId) return; // Même catégorie, rien à faire
-      
-      try {
-        // Obtenir les bookmarks de chaque catégorie
-        const sourceBookmarks = bookmarks
-          .filter(b => b.tabId === activeBookmark.tabId)
-          .sort((a, b) => a.order - b.order);
-        
+    try {
+      // Récupérer l'onglet cible
+      let destinationTabId;
+      let destinationIndex;
+
+      if (over.id.toString().startsWith('category-')) {
+        // Déposé sur une catégorie
+        destinationTabId = over.id.replace('category-', '');
+        // Placer en dernière position par défaut
         const targetBookmarks = bookmarks
-          .filter(b => b.tabId === newTabId)
+          .filter(b => b.tabId === destinationTabId)
           .sort((a, b) => a.order - b.order);
-        
-        const sourceIndex = sourceBookmarks.findIndex(b => b.id === activeBookmark.id);
-        const destinationIndex = targetBookmarks.length; // En dernier
-        
-        // Mise à jour optimiste locale
-        const newBookmarks = bookmarks.map(b => {
-          if (b.id === activeBookmark.id) {
-            return { ...b, tabId: newTabId };
+        destinationIndex = targetBookmarks.length;
+      } else {
+        // Déposé sur un autre bookmark
+        const overBookmark = bookmarks.find(b => b.id === over.id);
+        if (!overBookmark) return;
+        destinationTabId = overBookmark.tabId;
+        const targetBookmarks = bookmarks
+          .filter(b => b.tabId === destinationTabId)
+          .sort((a, b) => a.order - b.order);
+        destinationIndex = targetBookmarks.findIndex(b => b.id === overBookmark.id);
+        // Ajuster l'index si le bookmark actif vient après
+        if (activeBookmark.tabId === destinationTabId && 
+            targetBookmarks.findIndex(b => b.id === activeBookmark.id) < destinationIndex) {
+          destinationIndex--;
+        }
+      }
+
+      const sourceTabId = activeBookmark.tabId;
+      const sourceBookmarks = bookmarks
+        .filter(b => b.tabId === sourceTabId)
+        .sort((a, b) => a.order - b.order);
+      const sourceIndex = sourceBookmarks.findIndex(b => b.id === activeBookmark.id);
+
+      // Mise à jour optimiste
+      let newBookmarks = [...bookmarks];
+      
+      if (sourceTabId === destinationTabId) {
+        // Réorganisation dans la même catégorie
+        const reorderedBookmarks = arrayMove(
+          sourceBookmarks,
+          sourceIndex,
+          destinationIndex
+        );
+        // Mettre à jour les ordres localement
+        newBookmarks = bookmarks.map(b => {
+          if (b.tabId === sourceTabId) {
+            const idx = reorderedBookmarks.findIndex(rb => rb.id === b.id);
+            if (idx !== -1) {
+              return { ...b, order: idx };
+            }
           }
           return b;
         });
-        setBookmarks(newBookmarks);
-        
-        // Utiliser l'API reorder existante
-        const response = await fetch('/api/bookmarks/reorder', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            bookmarkId: activeBookmark.id,
-            sourceIndex: sourceIndex,
-            destinationIndex: destinationIndex,
-            sourceTabId: activeBookmark.tabId,
-            destinationTabId: newTabId,
-          }),
-        });
-
-        if (response.ok) {
-          toast.success('Favori déplacé');
-          // Recharger pour avoir les bons ordres
-          fetchBookmarks();
-        } else {
-          fetchBookmarks();
-          toast.error('Erreur lors du déplacement');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        fetchBookmarks();
-        toast.error('Erreur lors du déplacement');
-      }
-    }
-    // Si on drop sur un autre bookmark
-    else {
-      const overBookmark = bookmarks.find(b => b.id === over.id);
-      if (!overBookmark) return;
-      
-      try {
-        const sourceTabId = activeBookmark.tabId;
-        const destinationTabId = overBookmark.tabId;
-        
-        // Obtenir les bookmarks triés
-        const sourceBookmarks = bookmarks
-          .filter(b => b.tabId === sourceTabId)
-          .sort((a, b) => a.order - b.order);
-        
-        const destinationBookmarks = bookmarks
-          .filter(b => b.tabId === destinationTabId)
-          .sort((a, b) => a.order - b.order);
-        
-        const sourceIndex = sourceBookmarks.findIndex(b => b.id === activeBookmark.id);
-        let destinationIndex = destinationBookmarks.findIndex(b => b.id === overBookmark.id);
-        
-        // Si on change de catégorie, insérer après le bookmark cible
-        if (sourceTabId !== destinationTabId) {
-          destinationIndex = destinationIndex + 1;
-        }
-        
-        // Mise à jour optimiste pour la même catégorie
-        if (sourceTabId === destinationTabId) {
-          const reordered = arrayMove(sourceBookmarks, sourceIndex, destinationIndex);
-          const newBookmarks = bookmarks.map(b => {
-            if (b.tabId === sourceTabId) {
-              const idx = reordered.findIndex(rb => rb.id === b.id);
-              if (idx !== -1) {
-                return { ...b, order: idx };
-              }
-            }
-            return b;
-          });
-          setBookmarks(newBookmarks);
-        }
-        
-        // Utiliser l'API reorder une seule fois
-        const response = await fetch('/api/bookmarks/reorder', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            bookmarkId: activeBookmark.id,
-            sourceIndex: sourceIndex,
-            destinationIndex: destinationIndex,
-            sourceTabId: sourceTabId,
-            destinationTabId: destinationTabId,
-          }),
-        });
-
-        if (response.ok) {
-          if (sourceTabId !== destinationTabId) {
-            toast.success('Favori déplacé');
-            fetchBookmarks(); // Recharger pour les changements de catégorie
+      } else {
+        // Déplacement vers une autre catégorie
+        newBookmarks = newBookmarks.map(b => {
+          if (b.id === activeBookmark.id) {
+            return { ...b, tabId: destinationTabId, order: destinationIndex };
           }
-          // Pas de rechargement pour la même catégorie (déjà mis à jour localement)
-        } else {
-          fetchBookmarks();
-          toast.error('Erreur lors du déplacement');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        fetchBookmarks();
-        toast.error('Erreur lors du déplacement');
+          return b;
+        });
+        // Ajuster les ordres dans la catégorie source
+        const updatedSourceBookmarks = sourceBookmarks
+          .filter(b => b.id !== activeBookmark.id)
+          .map((b, idx) => ({ ...b, order: idx }));
+        // Ajuster les ordres dans la catégorie cible
+        const targetBookmarks = bookmarks
+          .filter(b => b.tabId === destinationTabId && b.id !== activeBookmark.id)
+          .sort((a, b) => a.order - b.order);
+        targetBookmarks.splice(destinationIndex, 0, { ...activeBookmark, tabId: destinationTabId, order: destinationIndex });
+        const updatedTargetBookmarks = targetBookmarks.map((b, idx) => ({ ...b, order: idx }));
+        // Fusionner les changements
+        newBookmarks = [
+          ...newBookmarks.filter(b => b.tabId !== sourceTabId && b.tabId !== destinationTabId),
+          ...updatedSourceBookmarks,
+          ...updatedTargetBookmarks
+        ];
       }
+
+      setBookmarks(newBookmarks);
+
+      // Préparer les données pour l'API
+      const sourceUpdates = newBookmarks
+        .filter(b => b.tabId === sourceTabId)
+        .map((b, index) => ({
+          id: b.id,
+          order: index,
+          tabId: sourceTabId
+        }));
+
+      const destinationUpdates = newBookmarks
+        .filter(b => b.tabId === destinationTabId)
+        .map((b, index) => ({
+          id: b.id,
+          order: index,
+          tabId: destinationTabId
+        }));
+
+      // Envoyer les mises à jour au backend
+      const response = await fetch('/api/bookmarks/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          updates: [...sourceUpdates, ...destinationUpdates]
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la mise à jour');
+      }
+
+      toast.success('Favori déplacé');
+    } catch (error) {
+      console.error('Drag end error:', error);
+      fetchBookmarks(); // Revenir à l'état initial en cas d'erreur
+      toast.error('Erreur lors du déplacement');
     }
   };
 
   const handleImportComplete = () => {
-    // Recharger la page pour actualiser les données
     window.location.reload();
   };
 
-  // Analyser l'URL pour extraire le titre automatiquement
   const handleUrlChange = async (url) => {
     setNewBookmark({ ...newBookmark, url });
 
     if (url && !newBookmark.title) {
       try {
-        // Extraire le domaine comme titre par défaut
         const urlObj = new URL(url);
         const domain = urlObj.hostname.replace('www.', '');
         const siteName = domain.split('.')[0];
@@ -352,7 +338,6 @@ export default function HomePage() {
     }
   };
 
-  // Ne PAS rediriger si on est en train de vérifier l'auth
   if (!loading && !isAuthenticated) {
     router.push('/home');
     return null;
@@ -366,7 +351,6 @@ export default function HomePage() {
     );
   }
 
-  // Récupérer le bookmark actif pour le DragOverlay
   const activeBookmark = activeId ? bookmarks.find(b => b.id === activeId) : null;
 
   return (
@@ -383,13 +367,10 @@ export default function HomePage() {
       </Head>
 
       <div className="space-y-6">
-        {/* Gestion des onglets */}
         <TabManager activeTab={activeTab} onTabChange={setActiveTab} isEditMode={isEditMode} onTabsChange={setTabs} />
 
-        {/* Contenu principal */}
         {activeTab && (
           <div className="bg-white rounded-lg shadow-sm p-6">
-            {/* Gestion des sous-catégories - visible seulement en mode édition */}
             {isEditMode && (
               <SubcategoryManager
                 parentTabId={activeTab}
@@ -405,7 +386,6 @@ export default function HomePage() {
               />
             )}
 
-            {/* Formulaire d'ajout */}
             {isAddingBookmark && (
               <div className="mb-6 fade-in">
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
@@ -519,7 +499,6 @@ export default function HomePage() {
               </div>
             )}
 
-            {/* Loading */}
             {loading && (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
@@ -527,7 +506,6 @@ export default function HomePage() {
               </div>
             )}
 
-            {/* Liste des favoris avec DnD global */}
             {!loading && (() => {
               const currentTab = tabs.find(t => t.id === activeTab);
               const subcategories = currentTab?.children || [];
@@ -554,13 +532,11 @@ export default function HomePage() {
                 onDragEnd={handleDragEnd}
               >
                 <div>
-                  {/* Récupérer l'onglet actif et ses sous-catégories */}
                   {(() => {
                     const currentTab = tabs.find(t => t.id === activeTab);
                     const subcategories = currentTab?.children || [];
                     const allTabIds = [activeTab, ...subcategories.map(s => s.id)];
                     
-                    // Grouper les favoris par catégorie
                     const bookmarksByCategory = {};
                     bookmarks
                       .filter(b => allTabIds.includes(b.tabId))
@@ -571,20 +547,16 @@ export default function HomePage() {
                         bookmarksByCategory[bookmark.tabId].push(bookmark);
                       });
 
-                    // Favoris sans sous-catégorie (directement dans l'onglet principal)
                     const mainBookmarks = bookmarksByCategory[activeTab] || [];
-                    
-                    // Pour le sélecteur, on ne veut que les onglets principaux
                     const selectableTabs = tabs.filter(t => !t.parentId);
 
                     return (
                       <>
-                        {/* Favoris par sous-catégorie EN PREMIER */}
                         {subcategories.map(subcategory => {
                           const categoryBookmarks = bookmarksByCategory[subcategory.id] || [];
                           
                           if (categoryBookmarks.length === 0 && !isEditMode) {
-                            return null; // Ne pas afficher les sous-catégories vides en mode lecture
+                            return null;
                           }
 
                           return (
@@ -640,7 +612,6 @@ export default function HomePage() {
                           );
                         })}
 
-                        {/* Favoris "Non classés" EN DERNIER */}
                         {(mainBookmarks.length > 0 || (subcategories.length > 0 && isEditMode)) && (
                           <DroppableCategory 
                             id={`category-${activeTab}`} 
@@ -695,7 +666,6 @@ export default function HomePage() {
                   })()}
                 </div>
 
-                {/* Overlay pour l'élément en cours de drag */}
                 <DragOverlay>
                   {activeBookmark ? (
                     <div className="opacity-50">
@@ -715,7 +685,6 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Export/Import en bas */}
         <div className="mt-8">
           <ExportImport onImport={handleImportComplete} />
         </div>
