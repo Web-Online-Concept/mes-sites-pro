@@ -42,14 +42,52 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Onglet de destination non trouvé' });
     }
 
-    // Déplacer le favori
-    const updatedBookmark = await prisma.bookmark.update({
-      where: { id: bookmarkId },
-      data: { tabId: newTabId },
-      include: { tab: true },
-    });
+    // Si on change vraiment de catégorie
+    if (bookmark.tabId !== newTabId) {
+      // Obtenir le prochain ordre disponible dans la catégorie de destination
+      const maxOrderResult = await prisma.bookmark.aggregate({
+        where: {
+          tabId: newTabId,
+          userId: userId,
+        },
+        _max: {
+          order: true,
+        },
+      });
 
-    res.status(200).json(updatedBookmark);
+      const newOrder = (maxOrderResult._max.order || 0) + 1;
+
+      // Déplacer le favori avec le nouvel ordre
+      const updatedBookmark = await prisma.bookmark.update({
+        where: { id: bookmarkId },
+        data: { 
+          tabId: newTabId,
+          order: newOrder 
+        },
+        include: { tab: true },
+      });
+
+      // Optionnel : Réorganiser les favoris dans l'ancienne catégorie pour combler le trou
+      await prisma.bookmark.updateMany({
+        where: {
+          tabId: bookmark.tabId,
+          userId: userId,
+          order: {
+            gt: bookmark.order
+          }
+        },
+        data: {
+          order: {
+            decrement: 1
+          }
+        }
+      });
+
+      res.status(200).json(updatedBookmark);
+    } else {
+      // Si on reste dans la même catégorie, ne rien faire
+      res.status(200).json(bookmark);
+    }
   } catch (error) {
     console.error('Move bookmark error:', error);
     res.status(500).json({ error: 'Erreur lors du déplacement du favori' });
