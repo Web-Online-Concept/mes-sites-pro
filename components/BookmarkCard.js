@@ -52,7 +52,6 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
     if (newTabId === bookmark.tabId) return;
 
     try {
-      // Récupérer les favoris de la catégorie cible pour déterminer la position
       const responseBookmarks = await fetch(`/api/bookmarks?tabId=${newTabId}`);
       const targetBookmarks = await responseBookmarks.json();
       const newOrder = targetBookmarks.length;
@@ -77,7 +76,8 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
         setSelectedTabId(newTabId);
         toast.success('Favori déplacé avec succès');
       } else {
-        toast.error('Erreur lors du déplacement');
+        const errorData = await response.json();
+        toast.error(errorData.error || 'Erreur lors du déplacement');
         setSelectedTabId(bookmark.tabId);
       }
     } catch (error) {
