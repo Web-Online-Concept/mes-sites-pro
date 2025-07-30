@@ -206,6 +206,10 @@ export default function HomePage() {
       const newTabId = over.id.replace('category-', '');
       
       if (newTabId !== activeBookmark.tabId) {
+        // Mise à jour optimiste immédiate
+        const updatedBookmark = { ...activeBookmark, tabId: newTabId };
+        handleUpdateBookmark(updatedBookmark);
+        
         try {
           const response = await fetch('/api/bookmarks/move', {
             method: 'PUT',
@@ -218,14 +222,18 @@ export default function HomePage() {
           });
 
           if (response.ok) {
-            const updatedBookmark = await response.json();
-            handleUpdateBookmark(updatedBookmark);
+            const serverBookmark = await response.json();
+            handleUpdateBookmark(serverBookmark);
             toast.success('Favori déplacé avec succès');
           } else {
+            // En cas d'erreur, on remet l'ancien état
+            handleUpdateBookmark(activeBookmark);
             toast.error('Erreur lors du déplacement');
           }
         } catch (error) {
           console.error('Move error:', error);
+          // En cas d'erreur, on remet l'ancien état
+          handleUpdateBookmark(activeBookmark);
           toast.error('Erreur lors du déplacement');
         }
       }
