@@ -49,7 +49,7 @@ async function getTab(userId, tabId, res) {
 
 // Mettre à jour un onglet
 async function updateTab(userId, tabId, req, res) {
-  const { name, order } = req.body;
+  const { name, order, icon } = req.body;
 
   try {
     // Vérifier que l'onglet appartient à l'utilisateur
@@ -68,6 +68,7 @@ async function updateTab(userId, tabId, req, res) {
     const updateData = {};
     if (name !== undefined) updateData.name = name.trim();
     if (order !== undefined) updateData.order = order;
+    if (icon !== undefined) updateData.icon = icon;
 
     const tab = await prisma.tab.update({
       where: { id: tabId },

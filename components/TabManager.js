@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import EmojiPicker from './EmojiPicker';
 
 export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsChange }) {
   const [tabs, setTabs] = useState([]);
   const [isCreating, setIsCreating] = useState(false);
   const [newTabName, setNewTabName] = useState('');
+  const [newTabIcon, setNewTabIcon] = useState('📁');
   const [editingTab, setEditingTab] = useState(null);
   const [editingName, setEditingName] = useState('');
+  const [editingIcon, setEditingIcon] = useState('');
 
   useEffect(() => {
     fetchTabs();
@@ -45,7 +48,10 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
       const response = await fetch('/api/tabs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newTabName.trim() }),
+        body: JSON.stringify({ 
+          name: newTabName.trim(),
+          icon: newTabIcon 
+        }),
       });
 
       if (response.ok) {
@@ -56,6 +62,7 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
           onTabsChange(updatedTabs);
         }
         setNewTabName('');
+        setNewTabIcon('📁');
         setIsCreating(false);
         onTabChange(newTab.id);
         toast.success('Onglet créé');
@@ -79,7 +86,10 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
       const response = await fetch(`/api/tabs/${tabId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: editingName.trim() }),
+        body: JSON.stringify({ 
+          name: editingName.trim(),
+          icon: editingIcon 
+        }),
       });
 
       if (response.ok) {
@@ -91,6 +101,7 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
         }
         setEditingTab(null);
         setEditingName('');
+        setEditingIcon('');
         toast.success('Onglet mis à jour');
       } else {
         toast.error('Erreur lors de la mise à jour');
@@ -149,7 +160,11 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
         {tabs.map((tab) => (
           <div key={tab.id} className="relative">
             {editingTab === tab.id ? (
-              <form onSubmit={(e) => { e.preventDefault(); handleUpdateTab(tab.id); }} className="flex items-center">
+              <form onSubmit={(e) => { e.preventDefault(); handleUpdateTab(tab.id); }} className="flex items-center gap-2">
+                <EmojiPicker 
+                  currentEmoji={editingIcon} 
+                  onSelect={setEditingIcon}
+                />
                 <input
                   type="text"
                   value={editingName}
@@ -158,14 +173,15 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
                     if (e.key === 'Escape') {
                       setEditingTab(null);
                       setEditingName('');
+                      setEditingIcon('');
                     }
                   }}
-                  className="px-3 py-1 border border-blue-500 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-1 border border-blue-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   autoFocus
                 />
                 <button
                   type="submit"
-                  className="px-2 py-1 bg-blue-500 text-white rounded-r-md hover:bg-blue-600"
+                  className="px-2 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
                 >
                   ✓
                 </button>
@@ -174,8 +190,9 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
                   onClick={() => {
                     setEditingTab(null);
                     setEditingName('');
+                    setEditingIcon('');
                   }}
-                  className="px-2 py-1 bg-gray-300 text-gray-700 rounded-r-md hover:bg-gray-400 ml-1"
+                  className="px-2 py-1 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
                 >
                   ✕
                 </button>
@@ -189,6 +206,7 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
                     : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 hover:border-gray-400 hover:shadow-sm'
                 }`}
               >
+                <span className="text-lg">{tab.icon || '📁'}</span>
                 {tab.name}
                 {/* Badge avec le nombre total de favoris */}
                 {!isEditMode && tab._count?.totalBookmarks > 0 && (
@@ -208,6 +226,7 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
                         e.stopPropagation();
                         setEditingTab(tab.id);
                         setEditingName(tab.name);
+                        setEditingIcon(tab.icon || '📁');
                       }}
                       className="hover:bg-blue-800 hover:bg-opacity-30 rounded p-0.5 cursor-pointer transition-colors"
                       title="Modifier"
@@ -236,18 +255,22 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
         {/* Bouton nouveau onglet - visible seulement en mode édition */}
         {isEditMode && (
           isCreating ? (
-            <form onSubmit={handleCreateTab} className="flex items-center">
+            <form onSubmit={handleCreateTab} className="flex items-center gap-2">
+              <EmojiPicker 
+                currentEmoji={newTabIcon} 
+                onSelect={setNewTabIcon}
+              />
               <input
                 type="text"
                 value={newTabName}
                 onChange={(e) => setNewTabName(e.target.value)}
                 placeholder="Nom de l'onglet"
-                className="px-3 py-1 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 autoFocus
               />
               <button
                 type="submit"
-                className="px-3 py-1 bg-green-500 text-white rounded-r-md hover:bg-green-600"
+                className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
               >
                 ✓
               </button>
@@ -256,8 +279,9 @@ export default function TabManager({ activeTab, onTabChange, isEditMode, onTabsC
                 onClick={() => {
                   setIsCreating(false);
                   setNewTabName('');
+                  setNewTabIcon('📁');
                 }}
-                className="ml-1 px-3 py-1 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                className="px-3 py-1 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
               >
                 ✕
               </button>

@@ -69,7 +69,7 @@ async function getTabs(userId, res) {
 
 // Créer un nouvel onglet ou sous-catégorie
 async function createTab(userId, req, res) {
-  const { name, parentId = null } = req.body;
+  const { name, parentId = null, icon = '📁' } = req.body;
 
   if (!name || !name.trim()) {
     return res.status(400).json({ error: 'Le nom est requis' });
@@ -105,6 +105,7 @@ async function createTab(userId, req, res) {
         userId,
         parentId,
         order: tabCount,
+        icon: icon,
       },
       include: {
         _count: {
