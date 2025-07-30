@@ -283,12 +283,34 @@ export default function HomePage() {
       }
       // Si on drop sur un bookmark d'une autre catégorie
       else if (overBookmark && activeBookmark.tabId !== overBookmark.tabId) {
-        // Déplacer vers la nouvelle catégorie
-        const updatedBookmark = { ...activeBookmark, tabId: overBookmark.tabId };
-        handleUpdateBookmark(updatedBookmark);
+        // On veut déplacer ET réorganiser dans la nouvelle catégorie
+        // D'abord, on simule localement le déplacement
+        const targetCategoryBookmarks = bookmarks
+          .filter(b => b.tabId === overBookmark.tabId)
+          .concat({ ...activeBookmark, tabId: overBookmark.tabId });
+        
+        // Trouver où insérer dans la nouvelle catégorie
+        const currentIndex = targetCategoryBookmarks.findIndex(b => b.id === activeBookmark.id);
+        const targetIndex = targetCategoryBookmarks.findIndex(b => b.id === overBookmark.id);
+        
+        // Réorganiser dans la nouvelle catégorie
+        const reorderedTargetBookmarks = arrayMove(targetCategoryBookmarks, currentIndex, targetIndex);
+        
+        // Reconstruire le tableau complet
+        const newBookmarks = bookmarks
+          .filter(b => b.id !== activeBookmark.id) // Retirer de l'ancienne position
+          .concat(reorderedTargetBookmarks.find(b => b.id === activeBookmark.id)) // Ajouter à la nouvelle
+          .map(b => {
+            // Mettre à jour les positions dans la catégorie cible
+            const reorderedBookmark = reorderedTargetBookmarks.find(rb => rb.id === b.id);
+            return reorderedBookmark || b;
+          });
+        
+        setBookmarks(newBookmarks);
         
         try {
-          const response = await fetch('/api/bookmarks/move', {
+          // D'abord déplacer vers la nouvelle catégorie
+          const moveResponse = await fetch('/api/bookmarks/move', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -298,17 +320,39 @@ export default function HomePage() {
             }),
           });
 
-          if (response.ok) {
-            const serverBookmark = await response.json();
-            handleUpdateBookmark(serverBookmark);
+          if (moveResponse.ok) {
+            // Ensuite réorganiser dans la nouvelle catégorie
+            // On doit recalculer les indices après le déplacement
+            const movedBookmarks = bookmarks
+              .filter(b => b.tabId === overBookmark.tabId || b.id === activeBookmark.id)
+              .map(b => b.id === activeBookmark.id ? { ...b, tabId: overBookmark.tabId } : b);
+            
+            const newOldIndex = movedBookmarks.findIndex(b => b.id === activeBookmark.id);
+            const newTargetIndex = movedBookmarks.findIndex(b => b.id === overBookmark.id);
+            
+            if (newOldIndex !== -1 && newTargetIndex !== -1) {
+              await fetch('/api/bookmarks/reorder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  bookmarkId: active.id,
+                  sourceIndex: newOldIndex,
+                  destinationIndex: newTargetIndex,
+                  sourceTabId: overBookmark.tabId,
+                  destinationTabId: overBookmark.tabId,
+                }),
+              });
+            }
+            
             toast.success('Favori déplacé avec succès');
           } else {
-            handleUpdateBookmark(activeBookmark);
+            // En cas d'erreur, recharger
+            fetchBookmarks();
             toast.error('Erreur lors du déplacement');
           }
         } catch (error) {
           console.error('Move error:', error);
-          handleUpdateBookmark(activeBookmark);
+          fetchBookmarks();
           toast.error('Erreur lors du déplacement');
         }
       }
