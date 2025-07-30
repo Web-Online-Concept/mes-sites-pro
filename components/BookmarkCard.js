@@ -197,8 +197,15 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, isEditMode,
                 {tabs && tabs.length > 0 && (
                   <select
                     value={selectedTabId}
-                    onChange={(e) => handleTabChange(e.target.value)}
-                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleTabChange(e.target.value);
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                    }}
                     className="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     title="Déplacer vers..."
                   >
