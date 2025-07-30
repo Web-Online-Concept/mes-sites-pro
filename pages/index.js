@@ -312,18 +312,18 @@ export default function HomePage() {
             // Réorganisation dans la même catégorie
             const reorderedBookmarks = arrayMove(sourceBookmarks, sourceIndex, destinationIndex);
             
-            // Mettre à jour avec les nouveaux ordres
-            const optimisticBookmarks = bookmarks.map(b => {
-              if (b.tabId === sourceTabId) {
-                const index = reorderedBookmarks.findIndex(rb => rb.id === b.id);
-                if (index !== -1) {
-                  return { ...b, order: index };
+            // Mettre à jour l'état local immédiatement
+            setBookmarks(prevBookmarks => {
+              return prevBookmarks.map(bookmark => {
+                if (bookmark.tabId === sourceTabId) {
+                  const index = reorderedBookmarks.findIndex(rb => rb.id === bookmark.id);
+                  if (index !== -1) {
+                    return { ...bookmark, order: index };
+                  }
                 }
-              }
-              return b;
+                return bookmark;
+              });
             });
-            
-            setBookmarks(optimisticBookmarks);
           } else {
             // Changement de catégorie
             const updatedBookmark = { 
